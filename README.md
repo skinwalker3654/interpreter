@@ -21,33 +21,33 @@ It supports variables, printing, delays, loops, and conditionals with a very sim
 ### Variables
 
 ```bash
-SET number = 10
-SET name = "michael"
+SET number = 10;
+SET name = "michael";
 ```
 
 
 ### Printing
 ```bash
-PRINT "Hello "
-PRINTLN "World"
-PRINTLN number
+PRINT "Hello ";
+PRINTLN "World";
+PRINTLN number;
 ```
 
 
 ### Delay
 
 ```bash
-WAIT 2 
-WAIT number 
+WAIT 2;
+WAIT number;
 ```
 
 ### Loops
 
 ```bash
-SET i = 1
+SET i = 1;
 FOR i TO 10:
-    PRINTLN i
-    i++
+    PRINTLN i;
+    i++;
 ENDFOR
 ```
 
@@ -56,8 +56,8 @@ ENDFOR
 
 ```bash
 IF number > 2:
-    PRINT number
-    PRINTLN " is bigger than 2"
+    PRINT number;
+    PRINTLN " is bigger than 2";
 ENDIF
 ```
 
@@ -66,30 +66,30 @@ ENDIF
 ## Example Program
 
 ```bash
-SET number = 10
-SET name = "michael"
+SET number = 10;
+SET name = "michael";
 
-PRINT "Name: "
-PRINTLN name
+PRINT "Name: ";
+PRINTLN namel
 
-PRINT "Number: "
-PRINTLN number
+PRINT "Number: ";
+PRINTLN number;
 
-PRINTLN "Waiting 2 seconds..."
-WAIT 2
+PRINTLN "Waiting 2 seconds...";
+WAIT 2;
 
-PRINTLN "Waiting number seconds..."
-WAIT number
+PRINTLN "Waiting number seconds...";
+WAIT number;
 
-SET i = 1
+SET i = 1;
 FOR i TO 10:
-    PRINTLN i
-    i++
+    PRINTLN i;
+    i++;
 ENDFOR
 
 IF number > 2:
-    PRINT number
-    PRINTLN " is bigger than 2"
+    PRINT number;
+    PRINTLN " is bigger than 2";
 ENDIF
 ```
 ---
