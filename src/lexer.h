@@ -2,7 +2,7 @@
 #define LEXER_H
 
 typedef enum {
-    TOKEN_PRINT,
+    TOKEN_PRINT=0,
     TOKEN_SET,
     TOKEN_WAIT,
     TOKEN_STRING,
@@ -24,6 +24,7 @@ typedef enum {
     TOKEN_ENDIF,
     TOKEN_TO,
     TOKEN_EOF,
+    TOKEN_SEMICOLON,
     TOKEN_ERROR,
 } TokenType;
 

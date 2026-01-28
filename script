@@ -1,25 +1,25 @@
-SET number = 10
-SET name = "michael"
+SET number = 10;
+SET name = "michael";
 
-PRINT "Name: "
-PRINTLN name
+PRINT "Name: ";
+PRINTLN name;
 
-PRINT "Number: "
-PRINTLN number
+PRINT "Number: ";
+PRINTLN number;
 
-PRINTLN "Waiting 2 seconds..."
-WAIT 2
+PRINTLN "Waiting 2 seconds...";
+WAIT 2;
 
-PRINTLN "Waiting number seconds..."
-WAIT number
+PRINTLN "Waiting number seconds...";
+WAIT number;
 
-SET i = 1
+SET i = 1;
 FOR i TO 10:
-    PRINTLN i
-    i++
+    PRINTLN i;
+    i++;
 ENDFOR
 
 IF number > 2:
-    PRINT number
-    PRINTLN " is bigger than 2"
+    PRINT number;
+    PRINTLN " is bigger than 2";
 ENDIF

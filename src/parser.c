@@ -90,6 +90,13 @@ int parse_code(Parser *ptr,Variables *var) {
                 return -1;
             }
 
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
             var->intvalue[found]++;
             return 0;
         }
@@ -97,6 +104,12 @@ int parse_code(Parser *ptr,Variables *var) {
         if(ptr->current_token.type == TOKEN_DECREASE) {
             if(var->type[found] != INT) {
                 printf("Error %d:%d Cannot decrease a string variable\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
                 return -1;
             }
 
@@ -118,6 +131,12 @@ int parse_code(Parser *ptr,Variables *var) {
                 }
 
                 strcpy(var->stringvalue[found],ptr->current_token.value);
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
                 return 0;
             } else if(ptr->current_token.type == TOKEN_NUMBER) {
                 if(var->type[found] != INT) {
@@ -126,6 +145,12 @@ int parse_code(Parser *ptr,Variables *var) {
                 }
 
                 var->intvalue[found] = atoi(ptr->current_token.value);
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
                 return 0;
             }
 
@@ -141,12 +166,30 @@ int parse_code(Parser *ptr,Variables *var) {
         }
 
         if(ptr->current_token.type == TOKEN_STRING) {
-            printf("%s",ptr->current_token.value);
+            char value[200];
+            strcpy(value,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            printf("%s",value);
             return 0;
         }
 
         if(ptr->current_token.type == TOKEN_VARIABLE) {
-            if(print_variable(var,ptr->current_token.value,PRINT)==0) return 0;
+            char value[200];
+            strcpy(value,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            if(print_variable(var,value,PRINT)==0) return 0;
             else return -1;
         }
 
@@ -161,12 +204,30 @@ int parse_code(Parser *ptr,Variables *var) {
         }
 
         if(ptr->current_token.type == TOKEN_STRING) {
-            printf("%s\n",ptr->current_token.value);
+            char string[200];
+            strcpy(string,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            printf("%s\n",string);
             return 0;
         }
 
         if(ptr->current_token.type == TOKEN_VARIABLE) {
-            if(print_variable(var,ptr->current_token.value,PRINTLN)==0) return 0;
+            char value[200];
+            strcpy(value,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            if(print_variable(var,value,PRINTLN)==0) return 0;
             else return -1;
         }
 
@@ -197,12 +258,25 @@ int parse_code(Parser *ptr,Variables *var) {
 
         if(ptr->current_token.type == TOKEN_STRING) {
             add_variable(var,varname,ptr->current_token.value,STRING);
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
             return 0;
         }
 
         if(ptr->current_token.type == TOKEN_NUMBER) {
             int number = atoi(ptr->current_token.value);
             add_variable(var,varname,&number,INT);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
             return 0;
         }
 
@@ -233,11 +307,27 @@ int parse_code(Parser *ptr,Variables *var) {
                 return -1;
             }
 
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
             sleep(var->intvalue[found]);
             return 0;
         } else {
-            int number = atoi(ptr->current_token.value);
+            char value[200];
+            strcpy(value,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
+                return 0;
+            }
+
+            int number = atoi(value);
             wait_seconds(number);
+
             return 0;
         }
 
@@ -780,10 +870,10 @@ int parse_code(Parser *ptr,Variables *var) {
             return -1;
         }
 
-        ptr->current_token = get_next_token(&ptr->lexer);
-
         Parser parser = {0};
         parser.lexer = lexer_init(block);
+
+        ptr->current_token = get_next_token(&ptr->lexer);
 
         if(stating_point < ending_point) {
             for(int i=stating_point; i<=ending_point; i++) {

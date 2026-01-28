@@ -4,7 +4,7 @@ GCC = gcc
 
 all: $(SRC)
 	@echo "compiling the compiler..."
-	$(GCC) $^ -o  $(TAR)
+	$(GCC) $^ -o  $(TAR) 
 
 script:
 	@echo "Running the script...."

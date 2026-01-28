@@ -136,6 +136,7 @@ Token get_next_token(Lexer *ptr) {
         case ':': advance(ptr); return make_token(TOKEN_COLON,symbols,ptr->line,ptr->column); 
         case '>': advance(ptr); return make_token(TOKEN_GREATER,symbols,ptr->line,ptr->column);
         case '<': advance(ptr); return make_token(TOKEN_LESS,symbols,ptr->line,ptr->column);
+        case ';': advance(ptr); return make_token(TOKEN_SEMICOLON,symbols,ptr->line,ptr->column);
     }
 
     return make_token(TOKEN_ERROR,"Invalid Input",ptr->line,ptr->column);
