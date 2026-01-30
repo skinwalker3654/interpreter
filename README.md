@@ -119,7 +119,7 @@ make clean
 
 ## Run Script
 ```bash
-make script
+make script # run the demo script
 ```
 ---
 
