@@ -108,7 +108,8 @@ MKDIR name;
 
 ## Build And Run
 ```bash
-make all
+make all # compile the program
+./main <filename> # execute scripts
 ```
 
 ## clean executables
