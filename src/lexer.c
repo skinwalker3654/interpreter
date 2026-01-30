@@ -81,6 +81,8 @@ Token get_next_token(Lexer *ptr) {
             return make_token(TOKEN_ENDIF,buffer,ptr->line,ptr->column);
         } else if(strcmp(buffer,"ENDFOR")==0) {
             return make_token(TOKEN_ENDFOR,buffer,ptr->line,ptr->column);
+        } else if(strcmp(buffer,"MKDIR")==0) {
+            return make_token(TOKEN_MKDIR,buffer,ptr->line,ptr->column);
         } else if(strcmp(buffer,"FOR")==0) {
             return make_token(TOKEN_FOR,buffer,ptr->line,ptr->column);
         } else if(strcmp(buffer,"TO")==0) {

@@ -23,6 +23,7 @@ typedef enum {
     TOKEN_LESS_EQUAL,
     TOKEN_ENDIF,
     TOKEN_TO,
+    TOKEN_MKDIR,
     TOKEN_EOF,
     TOKEN_SEMICOLON,
     TOKEN_ERROR,

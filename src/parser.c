@@ -2,6 +2,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
+#include <sys/stat.h>
 #include "parser.h"
 #include "lexer.h"
 
@@ -63,6 +64,69 @@ void wait_seconds(int seconds) {
 int parse_code(Parser *ptr,Variables *var) {
     ptr->current_token = get_next_token(&ptr->lexer);
     if(ptr->current_token.type == TOKEN_EOF) return 0;
+
+    if(ptr->current_token.type == TOKEN_MKDIR) {
+        ptr->current_token = get_next_token(&ptr->lexer);
+        if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_STRING) {
+            printf("Error %d:%d -> Invalid folder name to create '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+            return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_VARIABLE) {
+            int found = -1;
+            for(int i=0; i<var->counter; i++) {
+                if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
+                    found = i;
+                    break;
+                }
+            }
+
+            if(found == -1) {
+                printf("Error %d:%d -> Variable '%s does not exists\n'",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                return -1;
+            }
+
+            if(var->type[found] == INT) {
+                printf("Error %d:%d -> Variable '%s' is an integer not a string\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                return -1;
+            }
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot to put the '; at the end\n'",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            int check = mkdir(var->stringvalue[found],0755);
+            if(check == -1) {
+                printf("Error: Failed to create the folder with name '%s'\n",var->stringvalue[found]);
+                return -1;
+            }
+
+            return 0;
+        }
+
+        if(ptr->current_token.type == TOKEN_STRING) {
+            char stringvalue[200];
+            strcpy(stringvalue,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            int check = mkdir(stringvalue,0755);
+            if(check == -1) {
+                printf("Error: Failed to create the folder with name '%s'\n",stringvalue);
+                return -1;
+            }
+
+            return 0;
+        }
+
+        return -1;
+    }
 
     if(ptr->current_token.type == TOKEN_VARIABLE) {
         int found = -1;

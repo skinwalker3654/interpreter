@@ -41,6 +41,12 @@ WAIT 2;
 WAIT number;
 ```
 
+### Folder Creation
+```bash
+MKDIR "folder name";
+MKDIR variable;
+```
+
 ### Loops
 
 ```bash
@@ -91,6 +97,12 @@ IF number > 2:
     PRINT number;
     PRINTLN " is bigger than 2";
 ENDIF
+
+PRINTLN "Creating the folders...";
+WAIT 2;
+
+MKDIR "FOLDER FOR PHOTOS";
+MKDIR name;
 ```
 ---
 

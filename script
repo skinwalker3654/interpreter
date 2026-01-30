@@ -23,3 +23,9 @@ IF number > 2:
     PRINT number;
     PRINTLN " is bigger than 2";
 ENDIF
+
+PRINTLN "creating the folders...";
+WAIT 2;
+
+MKDIR "FOLDER FOR PHOTOS";
+MKDIR name;
