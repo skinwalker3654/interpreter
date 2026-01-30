@@ -44,7 +44,7 @@ WAIT number;
 ### Folder Creation
 ```bash
 MKDIR "folder name";
-MKDIR variable;
+MKDIR variable_name;
 ```
 
 ### Loops
