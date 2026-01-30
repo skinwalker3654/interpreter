@@ -139,6 +139,6 @@ Planned features:
 - User input
 - Math library
 - Comments support
-- Error messages with line numbers
+- more shell operations
 
 # interpiter
