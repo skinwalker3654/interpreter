@@ -41,8 +41,9 @@ Token make_token(TokenType type, char *value, int line, int column) {
 Token get_next_token(Lexer *ptr) {
     skip_white_spaces(ptr);
     char current = peek(ptr);
+    int line = ptr->line;
 
-    if(current == '\0') return make_token(TOKEN_EOF,"",ptr->line,ptr->column);
+    if(current == '\0') return make_token(TOKEN_EOF,"",line,ptr->column);
 
     if(isdigit(current)) {
         char buffer[256];
@@ -54,7 +55,7 @@ Token get_next_token(Lexer *ptr) {
         }
 
         buffer[counter] = '\0';
-        return make_token(TOKEN_NUMBER,buffer,ptr->line,ptr->column);
+        return make_token(TOKEN_NUMBER,buffer,line,ptr->column);
     }
 
     if(isalpha(current)) {
@@ -68,27 +69,27 @@ Token get_next_token(Lexer *ptr) {
 
         buffer[counter] = '\0';
         if(strcmp(buffer,"PRINT")==0) {
-            return make_token(TOKEN_PRINT,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_PRINT,buffer,line,ptr->column);
         } else if(strcmp(buffer,"PRINTLN")==0) {
-            return make_token(TOKEN_PRINTLN,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_PRINTLN,buffer,line,ptr->column);
         } else if(strcmp(buffer,"SET")==0) {
-            return make_token(TOKEN_SET,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_SET,buffer,line,ptr->column);
         } else if(strcmp(buffer,"WAIT")==0) {
-            return make_token(TOKEN_WAIT,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_WAIT,buffer,line,ptr->column);
         } else if(strcmp(buffer,"IF")==0) {
-            return make_token(TOKEN_IF,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_IF,buffer,line,ptr->column);
         } else if(strcmp(buffer,"ENDIF")==0) {
-            return make_token(TOKEN_ENDIF,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_ENDIF,buffer,line,ptr->column);
         } else if(strcmp(buffer,"ENDFOR")==0) {
-            return make_token(TOKEN_ENDFOR,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_ENDFOR,buffer,line,ptr->column);
         } else if(strcmp(buffer,"MKDIR")==0) {
-            return make_token(TOKEN_MKDIR,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_MKDIR,buffer,line,ptr->column);
         } else if(strcmp(buffer,"FOR")==0) {
-            return make_token(TOKEN_FOR,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_FOR,buffer,line,ptr->column);
         } else if(strcmp(buffer,"TO")==0) {
-            return make_token(TOKEN_TO,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_TO,buffer,line,ptr->column);
         } else {
-            return make_token(TOKEN_VARIABLE,buffer,ptr->line,ptr->column);
+            return make_token(TOKEN_VARIABLE,buffer,line,ptr->column);
         }
     }
 
@@ -105,7 +106,7 @@ Token get_next_token(Lexer *ptr) {
         advance(ptr);
         buffer[counter] = '\0';
 
-        return make_token(TOKEN_STRING,buffer,ptr->line,ptr->column);
+        return make_token(TOKEN_STRING,buffer,line,ptr->column);
     }
 
     char symbols[2] = {current,'\0'};
@@ -114,32 +115,32 @@ Token get_next_token(Lexer *ptr) {
     if(doubles[0] == '+' && doubles[1] == '+') {
         advance(ptr);
         advance(ptr);
-        return make_token(TOKEN_INCREASE,doubles,ptr->line,ptr->column);
+        return make_token(TOKEN_INCREASE,doubles,line,ptr->column);
     } else if(doubles[0] == '-' && doubles[1] == '-') {
         advance(ptr);
         advance(ptr);
-        return make_token(TOKEN_DECREASE,doubles,ptr->line,ptr->column);
+        return make_token(TOKEN_DECREASE,doubles,line,ptr->column);
     } else if(doubles[0] == '>' && doubles[1] == '=') {
         advance(ptr);
         advance(ptr);
-        return make_token(TOKEN_GREATER_EQUAL,doubles,ptr->line,ptr->column); 
+        return make_token(TOKEN_GREATER_EQUAL,doubles,line,ptr->column); 
     } else if(doubles[0] == '<' && doubles[1] == '=') {
         advance(ptr);
         advance(ptr);
-        return make_token(TOKEN_LESS_EQUAL,doubles,ptr->line,ptr->column);
+        return make_token(TOKEN_LESS_EQUAL,doubles,line,ptr->column);
     } else if(doubles[0] == '=' && doubles[1] == '=') {
         advance(ptr);
         advance(ptr);
-        return make_token(TOKEN_EQUAL_EQUAL,doubles,ptr->line,ptr->column);
+        return make_token(TOKEN_EQUAL_EQUAL,doubles,line,ptr->column);
     }
 
     switch(symbols[0]) {
-        case '=': advance(ptr); return make_token(TOKEN_EQUAL,symbols,ptr->line,ptr->column);
-        case ':': advance(ptr); return make_token(TOKEN_COLON,symbols,ptr->line,ptr->column); 
-        case '>': advance(ptr); return make_token(TOKEN_GREATER,symbols,ptr->line,ptr->column);
-        case '<': advance(ptr); return make_token(TOKEN_LESS,symbols,ptr->line,ptr->column);
-        case ';': advance(ptr); return make_token(TOKEN_SEMICOLON,symbols,ptr->line,ptr->column);
+        case '=': advance(ptr); return make_token(TOKEN_EQUAL,symbols,line,ptr->column);
+        case ':': advance(ptr); return make_token(TOKEN_COLON,symbols,line,ptr->column); 
+        case '>': advance(ptr); return make_token(TOKEN_GREATER,symbols,line,ptr->column);
+        case '<': advance(ptr); return make_token(TOKEN_LESS,symbols,line,ptr->column);
+        case ';': advance(ptr); return make_token(TOKEN_SEMICOLON,symbols,line,ptr->column);
     }
 
-    return make_token(TOKEN_ERROR,"Invalid Input",ptr->line,ptr->column);
+    return make_token(TOKEN_ERROR,"Invalid Input",line,ptr->column);
 }
