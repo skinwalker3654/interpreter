@@ -140,19 +140,23 @@ println number;
 
 ## Build And Run
 ```bash
-make all # compile the program
-./main <filename> # execute scripts
+make  # compile the program
+./run <filename> # execute scripts
 ```
+
+## For greeklish version you do
+```bash
+make greeklish
+./marion <filename>
+```
+
+---
 
 ## clean executables
 ```bash
 make clean
 ```
 
-## Run Script
-```bash
-make script # run the demo script
-```
 ---
 
 ## Design Goals

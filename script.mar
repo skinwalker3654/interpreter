@@ -1,0 +1,39 @@
+metablhth number = 10;
+metablhth name = "michael";
+number++;
+
+print "Name: ";
+printent name;
+
+print "Number: ";
+printent number;
+
+printent "Waiting 2 seconds...";
+perimene 2;
+
+printent "Waiting number seconds...";
+perimene number;
+
+metablhth i = 1;
+gia i eos 10:
+    printent i;
+    i++;
+telosgia
+
+an number > 2:
+    print number;
+    printent " is bigger than 2";
+telosan
+
+printent "creating the folders...";
+perimene 2;
+
+neosfakelos "FOLDER FOR PHOTOS";
+neosfakelos name;
+
+perimene 2;
+ka8arise;
+perimene 2;
+
+number += 20;
+printent number;
