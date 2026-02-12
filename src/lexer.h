@@ -25,6 +25,7 @@ typedef enum {
     TOKEN_TO,
     TOKEN_MKDIR,
     TOKEN_EOF,
+    TOKEN_CLEAR,
     TOKEN_SEMICOLON,
     TOKEN_ERROR,
 } TokenType;

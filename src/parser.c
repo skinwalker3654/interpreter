@@ -65,6 +65,17 @@ int parse_code(Parser *ptr,Variables *var) {
     ptr->current_token = get_next_token(&ptr->lexer);
     if(ptr->current_token.type == TOKEN_EOF) return 0;
 
+    if(ptr->current_token.type == TOKEN_CLEAR) {
+        ptr->current_token = get_next_token(&ptr->lexer);
+        if(ptr->current_token.type != TOKEN_SEMICOLON) {
+            printf("Error %d:%d -> Forgot to put a semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
+            return -1;
+        }
+
+        system("clear");
+        return 0;
+    }
+
     if(ptr->current_token.type == TOKEN_MKDIR) {
         ptr->current_token = get_next_token(&ptr->lexer);
         if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_STRING) {
@@ -441,7 +452,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 int found = -1;
                 while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"ENDIF", 5)==0) {
+                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endif", 5)==0) {
                         found = 1;
                         break;
                     }
@@ -453,7 +464,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 block[counter] = '\0';
                 if(found == -1) {
-                    printf("Error %d Forgot to close the if with ENDIF\n",line);
+                    printf("Error %d Forgot to close the if with endif\n",line);
                     return -1;
                 } 
 
@@ -544,7 +555,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 int foundIdx = -1;
                 while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"ENDIF", 5)==0) {
+                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endif", 5)==0) {
                         foundIdx = 1;
                         break;
                     }
@@ -556,7 +567,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 block[counter] = '\0';
                 if(found == -1) {
-                    printf("Error %d Forgot to close the if with ENDIF\n",line);
+                    printf("Error %d Forgot to close the if with endif\n",line);
                     return -1;
                 } 
 
@@ -671,7 +682,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 int foundIdx = -1;
                 while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"ENDIF", 5)==0) {
+                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endif", 5)==0) {
                         foundIdx = 1;
                         break;
                     }
@@ -682,7 +693,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 block[counter] = '\0';
                 if(found == -1) {
-                    printf("Error %d Forgot to close the if with ENDIF\n",line);
+                    printf("Error %d Forgot to close the if with endif\n",line);
                     return -1;
                 } 
 
@@ -774,7 +785,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 int foundIdx = -1;
                 while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"ENDIF", 5)==0) {
+                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endif", 5)==0) {
                         foundIdx = 1;
                         break;
                     }
@@ -785,7 +796,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 block[counter] = '\0';
                 if(found == -1) {
-                    printf("Error %d Forgot to close the if with ENDIF\n",line);
+                    printf("Error %d Forgot to close the if with endif\n",line);
                     return -1;
                 } 
 
@@ -879,7 +890,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
         ptr->current_token = get_next_token(&ptr->lexer);
         if(ptr->current_token.type != TOKEN_TO) {
-            printf("Error %d:%d -> Forgot to put 'TO'\n",ptr->current_token.line,ptr->current_token.column);
+            printf("Error %d:%d -> Forgot to put 'to'\n",ptr->current_token.line,ptr->current_token.column);
             return -1;
         }
 
@@ -919,7 +930,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
         int found = -1;
         while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-            if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"ENDFOR", 6)==0) {
+            if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endfor", 6)==0) {
                 found = 1;
                 break;
             }
@@ -930,7 +941,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
         block[counter] = '\0';
         if(found == -1) {
-            printf("Error %d Forgot to close the for loop with ENDFOR\n",line);
+            printf("Error %d Forgot to close the for loop with endfor\n",line);
             return -1;
         }
 

@@ -68,26 +68,28 @@ Token get_next_token(Lexer *ptr) {
         }
 
         buffer[counter] = '\0';
-        if(strcmp(buffer,"PRINT")==0) {
+        if(strcmp(buffer,"print")==0) {
             return make_token(TOKEN_PRINT,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"PRINTLN")==0) {
+        } else if(strcmp(buffer,"println")==0) {
             return make_token(TOKEN_PRINTLN,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"SET")==0) {
+        } else if(strcmp(buffer,"set")==0) {
             return make_token(TOKEN_SET,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"WAIT")==0) {
+        } else if(strcmp(buffer,"wait")==0) {
             return make_token(TOKEN_WAIT,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"IF")==0) {
+        } else if(strcmp(buffer,"if")==0) {
             return make_token(TOKEN_IF,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"ENDIF")==0) {
+        } else if(strcmp(buffer,"endif")==0) {
             return make_token(TOKEN_ENDIF,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"ENDFOR")==0) {
+        } else if(strcmp(buffer,"endfor")==0) {
             return make_token(TOKEN_ENDFOR,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"MKDIR")==0) {
+        } else if(strcmp(buffer,"mkdir")==0) {
             return make_token(TOKEN_MKDIR,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"FOR")==0) {
+        } else if(strcmp(buffer,"for")==0) {
             return make_token(TOKEN_FOR,buffer,line,ptr->column);
-        } else if(strcmp(buffer,"TO")==0) {
+        } else if(strcmp(buffer,"to")==0) {
             return make_token(TOKEN_TO,buffer,line,ptr->column);
+        } else if(strcmp(buffer,"clear")==0) {
+            return make_token(TOKEN_CLEAR,buffer,line,ptr->column);
         } else {
             return make_token(TOKEN_VARIABLE,buffer,line,ptr->column);
         }

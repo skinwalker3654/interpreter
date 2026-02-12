@@ -9,62 +9,75 @@ It supports variables, printing, delays, loops, and conditionals with a very sim
 
 ## Features
 
-- Variables with `SET`
-- Console output with `PRINT` and `PRINTLN`
-- Sleep/delay with `WAIT`
+- Variables with `set`
+- Console output with `PRINT` and `println`
+- Sleep/delay with `wait`
 - For-loops with manual increment
-- Conditional statements (`IF / ENDIF`)
-- Minimal syntax, no brackets or semicolons
+- Conditional statements (`if / endif`)
+- Loop statements (`for / endfor`)
 
 ## Syntax
 
 ### Variables
 
 ```bash
-SET number = 10;
-SET name = "michael";
+set number = 10;
+set name = "michael";
 ```
 
+### Variable assigments
+```bash
+varname = "new message";
+varname = 23;
+
+varname++;
+varname--;
+```
 
 ### Printing
 ```bash
-PRINT "Hello ";
-PRINTLN "World";
-PRINTLN number;
+print "Hello ";
+println "World";
+println number;
 ```
 
 
 ### Delay
 
 ```bash
-WAIT 2;
-WAIT number;
+wait 2;
+wait number;
 ```
 
 ### Folder Creation
 ```bash
-MKDIR "folder name";
-MKDIR variable_name;
+mkdir "folder name";
+mkdir variable_name;
+```
+
+### Clear terminal
+```bash
+clear;
 ```
 
 ### Loops
 
 ```bash
-SET i = 1;
-FOR i TO 10:
-    PRINTLN i;
+set i = 1;
+for i to 10:
+    println i;
     i++;
-ENDFOR
+endfor
 ```
 
 
 ### Conditionals
 
 ```bash
-IF number > 2:
-    PRINT number;
-    PRINTLN " is bigger than 2";
-ENDIF
+if number > 2:
+    print number;
+    println " is bigger than 2";
+endif
 ```
 
 ---
@@ -72,37 +85,46 @@ ENDIF
 ## Example Program
 
 ```bash
-SET number = 10;
-SET name = "michael";
+set number = 10;
+set name = "michael";
 
-PRINT "Name: ";
-PRINTLN namel
+print "Name: ";
+println namel
 
-PRINT "Number: ";
-PRINTLN number;
+print "Number: ";
+println number;
 
-PRINTLN "Waiting 2 seconds...";
-WAIT 2;
+println "Waiting 2 seconds...";
+wait 2;
 
-PRINTLN "Waiting number seconds...";
-WAIT number;
+wait "Waiting number seconds...";
+wait number;
 
-SET i = 1;
-FOR i TO 10:
-    PRINTLN i;
+set i = 1;
+for i to 10:
+    println i;
     i++;
-ENDFOR
+endfor
 
-IF number > 2:
-    PRINT number;
-    PRINTLN " is bigger than 2";
-ENDIF
+if number > 2:
+    print number;
+    println " is bigger than 2";
+endif
 
-PRINTLN "Creating the folders...";
-WAIT 2;
+println "Creating the folders...";
+wait 2;
 
-MKDIR "FOLDER FOR PHOTOS";
-MKDIR name;
+mkdir "FOLDER FOR PHOTOS";
+mkdir name;
+
+number++;
+name = "john";
+
+println number;
+println name;
+
+clear;
+wait 2;
 ```
 ---
 
