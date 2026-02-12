@@ -36,5 +36,9 @@ name = "john";
 println number;
 println name;
 
+wait 2;
 clear;
 wait 2;
+
+number += 20;
+println number;

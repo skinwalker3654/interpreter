@@ -32,6 +32,12 @@ varname = 23;
 
 varname++;
 varname--;
+
+varname -= 20;
+varname -= other_varname;
+
+varname += 20;
+varname += other_varname;
 ```
 
 ### Printing
@@ -123,8 +129,12 @@ name = "john";
 println number;
 println name;
 
+wait 2;
 clear;
 wait 2;
+
+number += 2;
+println number;
 ```
 ---
 
