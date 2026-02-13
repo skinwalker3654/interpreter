@@ -139,7 +139,7 @@ wait 2;
 number += 2;
 println number;
 
-remove name;
+remove "michael";
 ```
 ---
 
