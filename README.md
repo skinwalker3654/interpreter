@@ -55,10 +55,13 @@ wait 2;
 wait number;
 ```
 
-### Folder Creation
+### Folder Creation & deletion
 ```bash
 mkdir "folder name";
 mkdir variable_name;
+
+remove "folder_name/file_name";
+remove variable_name;
 ```
 
 ### Clear terminal
@@ -135,6 +138,8 @@ wait 2;
 
 number += 2;
 println number;
+
+remove name;
 ```
 ---
 

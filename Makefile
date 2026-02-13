@@ -16,4 +16,4 @@ clean:
 	@echo "Deleting executables..."
 	rm -rf $(TAR) $(GREEKTAR)
 
-.PHONY: all clean script
+.PHONY: all clean script greeklish

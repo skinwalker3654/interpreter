@@ -76,6 +76,70 @@ int parse_code(Parser *ptr,Variables *var) {
         return 0;
     }
 
+    if(ptr->current_token.type == TOKEN_REMOVE) {
+        ptr->current_token = get_next_token(&ptr->lexer);
+        if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_STRING) {
+            printf("Error %d:%d -> δεν μπορεις να σβησεις τον φακελο/αρχειο με ονομα '%s'. Πρεπει το ονομα να ειναι μεσα σε \" \" ή να βαλεις καποια μεταβλητη η οποια εχει ονομα μεσα ΟΧΙ αριθμο\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+            return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_VARIABLE) {
+            int found = -1;
+            for(int i=0; i<var->counter; i++) {
+                if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
+                    found = i;
+                    break;
+                }
+            }
+
+            if(found == -1) {
+                printf("Error %d:%d -> Η μεταβλητη που εβαλες στο sbyse -> '%s, δεν υπαρχει καπου στον κοδικα\n'",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                return -1;
+            }
+
+            if(var->type[found] == INT) {
+                printf("Error %d:%d -> Αυτη η μεταβλητη -> '%s' εχει τιμη αριθμου μεσα της και δεν μπορεις να σβυσεις φακελους/αρχεια που εχουν αριθμο για τιμι, πρεπει να φτιαξεις μια μεταβλητη οπου θα περιεχει το ονομα του φακελου/αρχειου μεσα σε \" \"\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                return -1;
+            }
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της sbyse\n'",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            int check = remove(var->stringvalue[found]);
+            if(check == -1) {
+                printf("Error: δεν μπορεσε να σβυστει ο φακελος/αρχειο με ονομα '%s', σηγουρεψου οτι υπαρχει φακελος/αρχειο με το ιδιο ονομα στο συστημα σου.\n",var->stringvalue[found]);
+                return -1;
+            }
+
+            return 0;
+        }
+
+        if(ptr->current_token.type == TOKEN_STRING) {
+            char stringvalue[200];
+            strcpy(stringvalue,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> ξεαχασες να βαλεις ενα ';' στο τελος της εντολης sbyse\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            int check = remove(stringvalue);
+            if(check == -1) {
+                printf("Error: δεν μπορεσε να σβυστει ο φακελος/αρχειο με ονομα '%s', σηγουρεψου οτι υπαρχει φακελος/αρχειο με το ιδιο ονομα στο συστημα σου.\n",stringvalue);
+                return -1;
+            }
+
+            return 0;
+        }
+
+        return -1;
+    }
+
+
     if(ptr->current_token.type == TOKEN_MKDIR) {
         ptr->current_token = get_next_token(&ptr->lexer);
         if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_STRING) {

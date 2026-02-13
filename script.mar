@@ -37,3 +37,5 @@ perimene 2;
 
 number += 20;
 printent number;
+
+sbyse "michael";

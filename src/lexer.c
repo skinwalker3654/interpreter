@@ -90,6 +90,8 @@ Token get_next_token(Lexer *ptr) {
             return make_token(TOKEN_TO,buffer,line,ptr->column);
         } else if(strcmp(buffer,"clear")==0) {
             return make_token(TOKEN_CLEAR,buffer,line,ptr->column);
+        } else if(strcmp(buffer,"remove")==0) {
+            return make_token(TOKEN_REMOVE,buffer,line,ptr->column);
         } else {
             return make_token(TOKEN_VARIABLE,buffer,line,ptr->column);
         }

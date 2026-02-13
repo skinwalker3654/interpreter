@@ -24,6 +24,7 @@ typedef enum {
     TOKEN_ENDIF,
     TOKEN_TO,
     TOKEN_MKDIR,
+    TOKEN_REMOVE,
     TOKEN_EOF,
     TOKEN_CLEAR,
     TOKEN_PLUS_EQUAL,
