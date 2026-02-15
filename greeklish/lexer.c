@@ -45,6 +45,13 @@ Token get_next_token(Lexer *ptr) {
 
     if(current == '\0') return make_token(TOKEN_EOF,"",line,ptr->column);
 
+    if(current == '#') {
+        while(peek(ptr) != '\n') 
+            advance(ptr);
+
+        return get_next_token(ptr); 
+    }
+
     if(isdigit(current)) {
         char buffer[256];
         int counter = 0;

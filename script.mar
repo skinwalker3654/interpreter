@@ -14,12 +14,14 @@ perimene 2;
 printent "Waiting number seconds...";
 perimene number;
 
+# ayto einai ena loop
 metablhth i = 1;
 gia i eos 10:
     printent i;
     i++;
 telosgia
 
+# kai ayto einai mia syn8ikh
 an number > 2:
     print number;
     printent " is bigger than 2";

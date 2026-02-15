@@ -109,6 +109,7 @@ wait 2;
 wait "Waiting number seconds...";
 wait number;
 
+# we also have comments, and this is a for loop
 set i = 1;
 for i to 10:
     println i;

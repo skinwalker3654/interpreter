@@ -13,12 +13,14 @@ wait 2;
 println "Waiting number seconds...";
 wait number;
 
+# this is a for loop
 set i = 1;
 for i to 10:
     println i;
     i++;
 endfor
 
+# this is an if statement
 if number > 2:
     print number;
     println " is bigger than 2";
