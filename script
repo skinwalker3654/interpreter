@@ -46,3 +46,9 @@ number += 20;
 println number;
 
 remove "michael";
+if number > 20:
+    println "number is bigger than 20";
+    endprogram;
+endif
+
+println "program has not ended";

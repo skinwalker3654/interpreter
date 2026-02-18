@@ -30,6 +30,7 @@ typedef enum {
     TOKEN_PLUS_EQUAL,
     TOKEN_MINUS_EQUAL,
     TOKEN_SEMICOLON,
+    TOKEN_ENDPROGRAM,
     TOKEN_ERROR,
 } TokenType;
 

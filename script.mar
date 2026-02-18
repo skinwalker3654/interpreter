@@ -41,3 +41,9 @@ number += 20;
 printent number;
 
 sbyse "michael";
+an number > 20:
+    printent "number is bigger than 20";
+    telosprograma;
+telosgia
+
+printent "program is not ended";

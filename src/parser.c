@@ -65,6 +65,16 @@ int parse_code(Parser *ptr,Variables *var) {
     ptr->current_token = get_next_token(&ptr->lexer);
     if(ptr->current_token.type == TOKEN_EOF) return 0;
 
+    if(ptr->current_token.type == TOKEN_ENDPROGRAM) {
+        ptr->current_token = get_next_token(&ptr->lexer);
+        if(ptr->current_token.type != TOKEN_SEMICOLON) {
+            printf("Error %d:%d -> Forgot a semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
+            return -1;
+        }
+
+        exit(EXIT_SUCCESS);
+    }
+
     if(ptr->current_token.type == TOKEN_CLEAR) {
         ptr->current_token = get_next_token(&ptr->lexer);
         if(ptr->current_token.type != TOKEN_SEMICOLON) {

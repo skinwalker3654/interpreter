@@ -141,6 +141,12 @@ number += 2;
 println number;
 
 remove "michael";
+if number > 2:
+    println "number is bigger than 2";
+    endprogram;
+endif
+
+println "program has not ended";
 ```
 ---
 
