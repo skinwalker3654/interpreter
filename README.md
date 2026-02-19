@@ -23,6 +23,9 @@ It supports variables, printing, delays, loops, and conditionals with a very sim
 ```bash
 set number = 10;
 set name = "michael";
+
+# this one gets the content of the file and puts it into the variable
+set content = read "file_name";
 ```
 
 ### Variable assigments
@@ -143,6 +146,8 @@ println number;
 remove "michael";
 if number > 2:
     println "number is bigger than 2";
+    set content = read "script";
+    print content;
     endprogram;
 endif
 

@@ -31,6 +31,7 @@ typedef enum {
     TOKEN_MINUS_EQUAL,
     TOKEN_SEMICOLON,
     TOKEN_ENDPROGRAM,
+    TOKEN_READ,
     TOKEN_ERROR,
 } TokenType;
 

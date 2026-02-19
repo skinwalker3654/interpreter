@@ -43,6 +43,8 @@ printent number;
 sbyse "michael";
 an number > 20:
     printent "number is bigger than 20";
+    metablhth periexomeno = diabase "script.mar";
+    print periexomeno;
     telosprograma;
 telosgia
 

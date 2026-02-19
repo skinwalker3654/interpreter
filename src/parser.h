@@ -19,9 +19,9 @@ typedef enum {
 } Print_type;
 
 typedef struct Variables {
-    char stringvalue[200][256];
+    char stringvalue[200][2025];
     int intvalue[200];
-    char variablename[200][256];
+    char variablename[200][2025];
     Variable_type type[200];
     int counter;
 } Variables;

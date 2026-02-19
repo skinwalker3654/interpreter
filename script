@@ -48,6 +48,8 @@ println number;
 remove "michael";
 if number > 20:
     println "number is bigger than 20";
+    set content = read "script";
+    print content;
     endprogram;
 endif
 

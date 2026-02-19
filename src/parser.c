@@ -502,9 +502,44 @@ int parse_code(Parser *ptr,Variables *var) {
         }
 
         ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_NUMBER) {
+        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_READ) {
             printf("Error %d:%d -> Invalid variable value '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
             return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_READ) {
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_STRING) {
+                printf("Error %d:%d -> file name must be inside of -> \" \"\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            char file[256];
+            strcpy(file,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> You forgot the semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            FILE *f = fopen(file,"r");
+            if(!f) {
+                printf("Error %d:%d -> Failed to read the file %s\n",ptr->current_token.line,ptr->current_token.column,file);
+                return -1;
+            }
+
+            fseek(f,0,SEEK_END);
+            int size = ftell(f);
+            rewind(f);
+
+            char buffer[size+1];
+            int len = fread(buffer,1,size,f);
+            buffer[len] = '\0';
+            fclose(f);
+
+            add_variable(var,varname,buffer,STRING);
+            return 0;
         }
 
         if(ptr->current_token.type == TOKEN_STRING) {
