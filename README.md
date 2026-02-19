@@ -24,7 +24,7 @@ It supports variables, printing, delays, loops, and conditionals with a very sim
 set number = 10;
 set name = "michael";
 
-# this one gets the content of the file and puts it into the variable
+# this line of code gets the content of the file and puts it into the variable
 set content = read "file_name";
 ```
 
