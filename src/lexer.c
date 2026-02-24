@@ -151,7 +151,7 @@ Token get_next_token(Lexer *ptr) {
         advance(ptr);
         advance(ptr);
         return make_token(TOKEN_PLUS_EQUAL,doubles,line,ptr->column);
-    } else if(doubles[0] == '-' && doubles [1 == '=']) {
+    } else if(doubles[0] == '-' && doubles [1] == '=') {
         advance(ptr);
         advance(ptr);
         return make_token(TOKEN_MINUS_EQUAL,doubles,line,ptr->column);
