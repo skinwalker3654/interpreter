@@ -502,12 +502,37 @@ int parse_code(Parser *ptr,Variables *var) {
         }
 
         ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_READ) {
+        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_READ_FILE && ptr->current_token.type != TOKEN_READ) {
             printf("Error %d:%d -> Invalid variable value '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
             return -1;
         }
 
         if(ptr->current_token.type == TOKEN_READ) {
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_STRING) {
+                printf("Error %d:%d -> message must be inside of -> \" \"\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            char message[256];
+            strcpy(message,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error: %d:%d -> You forgot the semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            char buffer[256];
+            printf("%s",message);
+            fgets(buffer,sizeof(buffer),stdin);
+            buffer[strcspn(buffer,"\n")] = 0;
+
+            add_variable(var,varname,buffer,STRING);
+            return 0;
+        }
+
+        if(ptr->current_token.type == TOKEN_READ_FILE) {
             ptr->current_token = get_next_token(&ptr->lexer);
             if(ptr->current_token.type != TOKEN_STRING) {
                 printf("Error %d:%d -> file name must be inside of -> \" \"\n",ptr->current_token.line,ptr->current_token.column);

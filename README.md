@@ -25,7 +25,14 @@ set number = 10;
 set name = "michael";
 
 # this line of code gets the content of the file and puts it into the variable
-set content = read "file_name";
+set content = read_file "file_name";
+```
+
+### take user input
+
+```bash
+# user input is by default a string
+set user_input = read "Message: ";
 ```
 
 ### Variable assigments
@@ -146,8 +153,13 @@ println number;
 remove "michael";
 if number > 2:
     println "number is bigger than 2";
-    set content = read "script";
+    set content = read_file "script";
     print content;
+
+    # takes user input
+    set user_input = read "Write something: ";
+    println user_input;
+
     endprogram;
 endif
 

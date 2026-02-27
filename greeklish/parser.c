@@ -503,12 +503,37 @@ int parse_code(Parser *ptr,Variables *var) {
         }
 
         ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_READ) {
+        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_READ_FILE && ptr->current_token.type != TOKEN_READ) {
             printf("Error %d:%d -> Δεν γινεται να βαλεις συμβολο ή αιρθμο αναμικτο με αλους χαρακτηες ΟΣ τιμι μιας μεταβλητης -> '%s', πρεπει να βαλεις εναν αιρθμο,  ενα μηνημα με \" \" ή diabase \"ονομα φεκελου\"\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
             return -1;
         }
 
         if(ptr->current_token.type == TOKEN_READ) {
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_STRING) {
+                printf("Error %d:%d -> το μηνημα της εντολης diabase πρεπει να εινι μεσα σε \" \"\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            char message[256];
+            strcpy(message,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error: %d:%d -> στην εντολη diabase ξεχασες να βαλεις ενα ';' στο τελος\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            char buffer[256];
+            printf("%s",message);
+            fgets(buffer,sizeof(buffer),stdin);
+            buffer[strcspn(buffer,"\n")] = 0;
+
+            add_variable(var,varname,buffer,STRING);
+            return 0;
+        }
+
+        if(ptr->current_token.type == TOKEN_READ_FILE) {
             ptr->current_token = get_next_token(&ptr->lexer);
             if(ptr->current_token.type != TOKEN_STRING) {
                 printf("Error %d:%d -> Στην εντολη diabase πρεπει το ονομα του φακελου να ειναι μεσα σε \" \"\n",ptr->current_token.line,ptr->current_token.column);

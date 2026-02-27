@@ -48,8 +48,13 @@ println number;
 remove "michael";
 if number > 20:
     println "number is bigger than 20";
-    set content = read "script";
+    set content = read_file "script";
     print content;
+
+    # takes user input
+    set user_input = read "Enter something: ";
+    println user_input;
+
     endprogram;
 endif
 
