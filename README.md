@@ -204,7 +204,6 @@ Planned features:
 - Arrays / lists
 - User input
 - Math library
-- Comments support
 - more shell operations
 
 # interpiter
