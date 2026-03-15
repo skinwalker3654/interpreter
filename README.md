@@ -48,6 +48,12 @@ varname -= other_varname;
 
 varname += 20;
 varname += other_varname;
+
+varname *= 20;
+varname *= other_varname;
+
+varname /= 20;
+varname /= other_varname;
 ```
 
 ### Printing
@@ -159,6 +165,9 @@ if number > 2:
     # takes user input
     set user_input = read "Write something: ";
     println user_input;
+
+    number /= 2;
+    println number;
 
     endprogram;
 endif

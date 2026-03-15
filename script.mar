@@ -50,6 +50,9 @@ an number > 20:
     metablhth apanthsh = diabase "Grace kati tyxaio: ";
     printent apanthsh;
 
+    number /= 2;
+    printent number;
+
     telosprograma;
 telosgia
 

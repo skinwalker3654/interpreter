@@ -228,7 +228,8 @@ int parse_code(Parser *ptr,Variables *var) {
 
         ptr->current_token = get_next_token(&ptr->lexer);
         if(ptr->current_token.type != TOKEN_EQUAL && ptr->current_token.type != TOKEN_INCREASE 
-                && ptr->current_token.type != TOKEN_DECREASE && ptr->current_token.type != TOKEN_PLUS_EQUAL && ptr->current_token.type != TOKEN_MINUS_EQUAL) {
+                && ptr->current_token.type != TOKEN_DECREASE && ptr->current_token.type != TOKEN_PLUS_EQUAL && ptr->current_token.type != TOKEN_MINUS_EQUAL
+                && ptr->current_token.type != TOKEN_STAR_EQUAL && ptr->current_token.type != TOKEN_SLASH_EQUAL) {
             printf("Error %d:%d -> Invalid variable assigment '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
             return -1;
         }
@@ -329,6 +330,118 @@ int parse_code(Parser *ptr,Variables *var) {
                 }
 
                 var->intvalue[found] -= var->intvalue[foundVar];
+                return 0;
+            }
+            
+            return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_STAR_EQUAL) {
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
+                printf("Erro %d:%d -> Invalid value to multiply the variable '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                return -1;
+            }
+
+            if(ptr->current_token.type == TOKEN_NUMBER) {
+                char number[256];
+                strcpy(number,ptr->current_token.value);
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                var->intvalue[found] *= atoi(number);
+                return 0;
+            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
+                int foundVar = -1;
+                for(int i=0; i<var->counter; i++) {
+                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
+                        foundVar = i;
+                        break;
+                    }
+                }
+
+                if(foundVar == -1) {
+                    printf("Error %d:%d -> This variale does not exists to use it as an multiplication value -> '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                    return -1;
+                }
+
+                if(var->type[found] != INT) {
+                    printf("Error %d:%d -> Variable '%s' is not an integer to use it as an multiplication value\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                    return -1;
+                }
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                var->intvalue[found] *= var->intvalue[foundVar];
+                return 0;
+            }
+            
+            return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_SLASH_EQUAL) {
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
+                printf("Erro %d:%d -> Invalid value to divide the variable '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                return -1;
+            }
+
+            if(ptr->current_token.type == TOKEN_NUMBER) {
+                char number[256];
+                strcpy(number,ptr->current_token.value);
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                if(atoi(number) == 0) {
+                    printf("Error %d:%d -> The second number is 0 on a division expresion. Thats invalid\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                var->intvalue[found] /= atoi(number);
+                return 0;
+            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
+                int foundVar = -1;
+                for(int i=0; i<var->counter; i++) {
+                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
+                        foundVar = i;
+                        break;
+                    }
+                }
+
+                if(foundVar == -1) {
+                    printf("Error %d:%d -> This variale does not exists to use it as an division value -> '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                    return -1;
+                }
+
+                if(var->type[found] != INT) {
+                    printf("Error %d:%d -> Variable '%s' is not an integer to use it as an division value\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                    return -1;
+                }
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                if(var->intvalue[foundVar] == 0) {
+                    printf("Error %d:%d -> The second number is 0 on a division expresion. Thats invalid\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                var->intvalue[found] /= var->intvalue[foundVar];
                 return 0;
             }
             

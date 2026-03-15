@@ -55,6 +55,9 @@ if number > 20:
     set user_input = read "Enter something: ";
     println user_input;
 
+    number /= 2;
+    println number;
+
     endprogram;
 endif
 

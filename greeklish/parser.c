@@ -228,8 +228,8 @@ int parse_code(Parser *ptr,Variables *var) {
         }
 
         ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_EQUAL && ptr->current_token.type != TOKEN_INCREASE && ptr->current_token.type != TOKEN_DECREASE && ptr->current_token.type != TOKEN_PLUS_EQUAL && ptr->current_token.type != TOKEN_MINUS_EQUAL) {
-            printf("Error %d:%d -> Δεν υπαρχει τετοια λιτυοργια για αλαγη τιμον μιας μεταβλητης -> %s' μπορεις μονο να κανεις ++, -- , = , += ή -=\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+        if(ptr->current_token.type != TOKEN_EQUAL && ptr->current_token.type != TOKEN_INCREASE && ptr->current_token.type != TOKEN_DECREASE && ptr->current_token.type != TOKEN_PLUS_EQUAL && ptr->current_token.type != TOKEN_MINUS_EQUAL && ptr->current_token.type != TOKEN_STAR_EQUAL && ptr->current_token.type != TOKEN_SLASH_EQUAL) {
+            printf("Error %d:%d -> Δεν υπαρχει τετοια λιτυοργια για αλαγη τιμον μιας μεταβλητης -> %s' μπορεις μονο να κανεις ++, -- , = , +=, -=, *= ή /=\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
             return -1;
         }
 
@@ -297,7 +297,7 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 ptr->current_token = get_next_token(&ptr->lexer);
                 if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της αυξησεις αυτης της μεταβλητης\n",ptr->current_token.line,ptr->current_token.column);
+                    printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της μιοσεις αυτης της μεταβλητης\n",ptr->current_token.line,ptr->current_token.column);
                     return -1;
                 }
 
@@ -325,11 +325,126 @@ int parse_code(Parser *ptr,Variables *var) {
 
                 ptr->current_token = get_next_token(&ptr->lexer);
                 if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της αυξησεις αυτης της μεταβλητης\n",ptr->current_token.line,ptr->current_token.column);
+                    printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της μιοσεις αυτης της μεταβλητης\n",ptr->current_token.line,ptr->current_token.column);
                     return -1;
                 }
 
                 var->intvalue[found] -= var->intvalue[foundVar];
+                return 0;
+            }
+            
+            return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_STAR_EQUAL) {
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
+                printf("Error %d:%d -> Δεν μπορεις να παλαπλασιασης την μεταβλητη με '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                return -1;
+            }
+
+            if(ptr->current_token.type == TOKEN_NUMBER) {
+                char number[256];
+                strcpy(number,ptr->current_token.value);
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της πολαπλασιασης αυτης της μεταβλητης\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                var->intvalue[found] *= atoi(number);
+                return 0;
+            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
+                int foundVar = -1;
+                for(int i=0; i<var->counter; i++) {
+                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
+                        foundVar = i;
+                        break;
+                    }
+                }
+
+                if(foundVar == -1) {
+
+                    printf("Error %d:%d -> η μεταβλητη αυτη '%s', δεν υπαρχει καπου στον κοδικα ωστε να μπορουμε να την χρισιμοποιησουμε για να πολαπλασιασουμε την προηγουμενη\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                    return -1;
+                }
+
+                if(var->type[found] != INT) {
+                    printf("Error %d:%d -> η μεταβλητη '%s', δεν εχει αριθμο για τιμι οποτε η πολαπλασιαση δεν ειναι εγκηρη\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                    return -1;
+                }
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της πολαπλασιασης αυτης της μεταβλητης\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                var->intvalue[found] *= var->intvalue[foundVar];
+                return 0;
+            }
+            
+            return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_SLASH_EQUAL) {
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
+                printf("Error %d:%d -> Δεν μπορεις να διαιρεσης την μεταβλητη με '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                return -1;
+            }
+
+            if(ptr->current_token.type == TOKEN_NUMBER) {
+                char number[256];
+                strcpy(number,ptr->current_token.value);
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της διαιρεση αυτης της μεταβλητης\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                if(atoi(number) == 0) {
+                    printf("Error %d:%d -> ο δευτερος αριθμος ειναι 0 Αυτο δεν ειναι εγκηρη πραξυ\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+
+                var->intvalue[found] /= atoi(number);
+                return 0;
+            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
+                int foundVar = -1;
+                for(int i=0; i<var->counter; i++) {
+                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
+                        foundVar = i;
+                        break;
+                    }
+                }
+
+                if(foundVar == -1) {
+
+                    printf("Error %d:%d -> η μεταβλητη αυτη '%s', δεν υπαρχει καπου στον κοδικα ωστε να μπορουμε να την χρισιμοποιησουμε για να διαρεσουμε την προηγουμενη\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                    return -1;
+                }
+
+                if(var->type[found] != INT) {
+                    printf("Error %d:%d -> η μεταβλητη '%s', δεν εχει αριθμο για τιμι οποτε η διαρεση δεν ειναι εγκηρη\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+                    return -1;
+                }
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error %d:%d -> ξεχασες να βαλεις ενα ';' στο τελος της διαιρεσης αυτης της μεταβλητης\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                if(var->intvalue[foundVar] == 0) {
+                    printf("Error %d:%d -> ο δευτερος αριθμος ειναι 0 Αυτο δεν ειναι εγκηρη πραξυ\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                var->intvalue[found] /= var->intvalue[foundVar];
                 return 0;
             }
             
