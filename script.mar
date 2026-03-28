@@ -52,7 +52,8 @@ an number > 20:
 
     number /= 2;
     printent number;
-
+    
+    treje "vim";
     telosprograma;
 telosgia
 

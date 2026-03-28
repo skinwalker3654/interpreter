@@ -2,8 +2,9 @@
 #include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
-#include <sys/stat.h>
 #include "parser.h"
+#include <sys/wait.h>
+#include <sys/stat.h>
 #include "lexer.h"
 
 void add_variable(Variables *ptr, char *varname, void *value, Variable_type type) {
@@ -65,10 +66,89 @@ int parse_code(Parser *ptr,Variables *var) {
     ptr->current_token = get_next_token(&ptr->lexer);
     if(ptr->current_token.type == TOKEN_EOF) return 0;
 
+    if(ptr->current_token.type == TOKEN_EXECUTE) {
+        ptr->current_token = get_next_token(&ptr->lexer);
+        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_VARIABLE) {
+            printf("Error %d:%d -> Δεν γινεται να τρεξεις '%s', πρεπει να βαλεις ενα προγραμα σε \" \" ή μια μεταβλητη που εχει κειμενο μεσα\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
+            return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_STRING) {
+            char program[256];
+            strcpy(program,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Ξεχασες να βαλεις το ';' στο τελος της εντολης treje\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            pid_t process = fork();
+            if(process == -1) {
+                printf("Error -> στην εντολη treje το προγραμα '%s' δεν βρεθηκε\n",program);
+                return -1;
+            }
+
+            if(process == 0) {
+                char *args[] = {program,NULL};
+                execvp(program,args);
+            } else {
+                wait(NULL);
+                return 0;
+            }
+
+            return -1;
+        }
+
+        if(ptr->current_token.type == TOKEN_VARIABLE) {
+            char variable[256];
+            strcpy(variable,ptr->current_token.value);
+
+            ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                printf("Error %d:%d -> Ξεχασες να βαλεις το ';' στο τελος της εντολης treje\n",ptr->current_token.line,ptr->current_token.column);
+                return -1;
+            }
+
+            int found = -1;
+            for(int i=0; i<var->counter; i++) {
+                if(strcmp(var->variablename[i],variable)==0) {
+                    found = i;
+                    if(var->type[i] != STRING) {
+                        printf("Error %d:%d -> η μεταβλητη '%s' στην εντολη treje δεν ειναιμεταβλητη με κειμενο\n",ptr->current_token.line,ptr->current_token.column,variable);
+                        return -1;
+                    }
+                    break;
+                }
+            }
+
+            if(found == -1) {
+                printf("Error %d:%d -> στην εντολη treje η μεταβλητη '%s'δεν υπαρχει\n",ptr->current_token.line,ptr->current_token.column,variable);
+                return -1;
+            }
+            
+            pid_t process = fork();
+            if(process == -1) {
+                printf("Error -> στην εντολη treje το προγραμα '%s' δεν υπαρχει",var->stringvalue[found]);
+                return -1;
+            }
+
+            if(process == 0) {
+                char *args[] = {var->stringvalue[found],NULL};
+                execvp(args[0],args);
+            } else {
+                wait(NULL);
+                return 0;
+            }
+
+            return -1;
+        }
+    }
+
     if(ptr->current_token.type == TOKEN_ENDPROGRAM) {
         ptr->current_token = get_next_token(&ptr->lexer);
         if(ptr->current_token.type != TOKEN_SEMICOLON) {
-            printf("ErrorL %d:%d -> Ξεχασες να βαλεις το ';' στο τελος του telosprograma\n",ptr->current_token.line,ptr->current_token.column);
+                printf("ErrorL %d:%d -> Ξεχασες να βαλεις το ';' στο τελος του telosprograma\n",ptr->current_token.line,ptr->current_token.column);
             return -1;
         }
 

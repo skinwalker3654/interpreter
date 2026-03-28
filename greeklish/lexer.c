@@ -101,6 +101,8 @@ Token get_next_token(Lexer *ptr) {
             return make_token(TOKEN_REMOVE,buffer,line,ptr->column);
         } else if(strcmp(buffer,"telosprograma")==0) {
             return make_token(TOKEN_ENDPROGRAM,buffer,line,ptr->column);
+        } else if(strcmp(buffer,"treje")==0) {
+            return make_token(TOKEN_EXECUTE,buffer,line,ptr->column);
         } else if(strcmp(buffer,"diabase_arxeio")==0) {
             return make_token(TOKEN_READ_FILE,buffer,line,ptr->column);
         } else if(strcmp(buffer,"diabase")==0) {

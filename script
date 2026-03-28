@@ -58,6 +58,7 @@ if number > 20:
     number /= 2;
     println number;
 
+    execute "vim";
     endprogram;
 endif
 

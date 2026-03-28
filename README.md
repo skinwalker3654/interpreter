@@ -63,6 +63,11 @@ println "World";
 println number;
 ```
 
+### Execute
+```bash
+execute "program";
+execute name;
+```
 
 ### Delay
 
@@ -169,6 +174,7 @@ if number > 2:
     number /= 2;
     println number;
 
+    execute "vim";
     endprogram;
 endif
 
