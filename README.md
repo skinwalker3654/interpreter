@@ -10,9 +10,12 @@ It supports variables, printing, delays, loops, and conditionals with a very sim
 ## Features
 
 - Variables with `set`
-- Console output with `PRINT` and `println`
+- Console output with `print` and `println`
 - Sleep/delay with `wait`
 - For-loops with manual increment
+- execute programs with `execute`
+- file reading `read_file`
+- I/O functions `read` and the previous one `print` and `println`    
 - Conditional statements (`if / endif`)
 - Loop statements (`for / endfor`)
 
