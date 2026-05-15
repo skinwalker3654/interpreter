@@ -36,6 +36,7 @@ typedef enum {
     TOKEN_EXECUTE,
     TOKEN_READ_FILE,
     TOKEN_READ,
+    TOKEN_INT,
     TOKEN_ERROR,
 } TokenType;
 

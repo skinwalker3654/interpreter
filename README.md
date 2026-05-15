@@ -36,6 +36,7 @@ set content = read_file "file_name";
 ```bash
 # user input is by default a string
 set user_input = read "Message: ";
+set user_number = read int "Message: ";
 ```
 
 ### Variable assigments
@@ -65,7 +66,6 @@ print "Hello ";
 println "World";
 println number;
 ```
-
 ### Execute
 ```bash
 execute "program";

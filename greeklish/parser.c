@@ -705,6 +705,38 @@ int parse_code(Parser *ptr,Variables *var) {
 
         if(ptr->current_token.type == TOKEN_READ) {
             ptr->current_token = get_next_token(&ptr->lexer);
+            if(ptr->current_token.type == TOKEN_INT) {
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_STRING) {
+                    printf("Error %d:%d -> το μηνημα της εντολης diabase πρεπει να εινι μεσα σε \" \"\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                char message[256];
+                strcpy(message,ptr->current_token.value);
+
+                ptr->current_token = get_next_token(&ptr->lexer);
+                if(ptr->current_token.type != TOKEN_SEMICOLON) {
+                    printf("Error: %d:%d -> στην εντολη diabase ξεχασες να βαλεις ενα ';' στο τελος\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                char buffer[256];
+                printf("%s",message);
+                fgets(buffer,sizeof(buffer),stdin);
+                buffer[strcspn(buffer,"\n")] = 0;
+
+                char *endPtr;
+                int number = strtol(buffer,&endPtr,10);
+                if(*endPtr != '\0') {
+                    printf("Error %d:%d -> στην εντολη diabase εβαλες να διαβασει akereo αλα δεν εδωσες ακερεο αριθμο\n",ptr->current_token.line,ptr->current_token.column);
+                    return -1;
+                }
+
+                add_variable(var,varname,&number,INT);
+                return 0;
+            }
+
             if(ptr->current_token.type != TOKEN_STRING) {
                 printf("Error %d:%d -> το μηνημα της εντολης diabase πρεπει να εινι μεσα σε \" \"\n",ptr->current_token.line,ptr->current_token.column);
                 return -1;

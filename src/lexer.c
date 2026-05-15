@@ -107,6 +107,8 @@ Token get_next_token(Lexer *ptr) {
             return make_token(TOKEN_READ_FILE,buffer,line,ptr->column);
         } else if(strcmp(buffer,"read")==0) {
             return make_token(TOKEN_READ,buffer,line,ptr->column);
+        } else if(strcmp(buffer,"int")==0) {
+            return make_token(TOKEN_INT,buffer,line,ptr->column);
         } else {
             return make_token(TOKEN_VARIABLE,buffer,line,ptr->column);
         }
@@ -163,7 +165,7 @@ Token get_next_token(Lexer *ptr) {
         advance(ptr);
         advance(ptr);
         return make_token(TOKEN_STAR_EQUAL,doubles,line,ptr->column);
-    }else if(doubles[0] == '/' && doubles [1] == '=') {
+    } else if(doubles[0] == '/' && doubles [1] == '=') {
         advance(ptr);
         advance(ptr);
         return make_token(TOKEN_SLASH_EQUAL,doubles,line,ptr->column);

@@ -54,6 +54,10 @@ an number > 20:
     printent number;
     
     treje "vim";
+    metablhth num1 = diabase akereo "Dwse enan ari8mo: ";
+    num1++;
+
+    printent num1;
     telosprograma;
 telosgia
 

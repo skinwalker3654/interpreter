@@ -59,6 +59,10 @@ if number > 20:
     println number;
 
     execute "vim";
+    set num1 = read int "Give a number: ";
+    num1++;
+
+    println num1;
     endprogram;
 endif
 
