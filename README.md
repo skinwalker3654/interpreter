@@ -31,7 +31,7 @@ set name = "michael";
 set content = read_file "file_name";
 ```
 
-### take user input
+### Take user input
 
 ```bash
 # user input is by default a string
