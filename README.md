@@ -122,7 +122,7 @@ set number = 10;
 set name = "michael";
 
 print "Name: ";
-println namel
+println name;
 
 print "Number: ";
 println number;
