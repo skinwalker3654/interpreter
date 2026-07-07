@@ -1,19 +1,14 @@
-SRC = src/main.c src/lexer.c src/parser.c
-TAR = run
-GREEKTAR = marion
-GCC = gcc
-GREEKLISH = greeklish/lexer.c greeklish/main.c greeklish/parser.c
+source = src/ast.c src/lexer.c src/parser.c src/token.c src/var.c src/main.c src/execute.c src/value.c
+cc = gcc
 
-all: $(SRC)
-	@echo "compiling the compiler..."
-	$(GCC) $^ -o  $(TAR) 
+target = marion
 
-greeklish: $(GREEKLISH)
-	@echo "copmiling the greeklish compiler..."
-	$(GCC) $^ -o $(GREEKTAR)
+$(target): $(source)
+	@echo "compiling the interpreter..."
+	$(cc) $^ -o $@ -g
 
 clean:
-	@echo "Deleting executables..."
-	rm -rf $(TAR) $(GREEKTAR)
+	@echo "removing executables..."
+	rm $(target)
 
-.PHONY: all clean script greeklish
+.PHONY: clean

@@ -42,22 +42,8 @@ set user_number = read int "Message: ";
 ### Variable assigments
 ```bash
 varname = "new message";
-varname = 23;
+varname = 23 + 3;
 
-varname++;
-varname--;
-
-varname -= 20;
-varname -= other_varname;
-
-varname += 20;
-varname += other_varname;
-
-varname *= 20;
-varname *= other_varname;
-
-varname /= 20;
-varname /= other_varname;
 ```
 
 ### Printing
@@ -97,20 +83,20 @@ clear;
 
 ```bash
 set i = 1;
-for i to 10:
+for i to 10 {
     println i;
-    i++;
-endfor
+    i = i + 1;
+}
 ```
 
 
 ### Conditionals
 
 ```bash
-if number > 2:
+if number > 2 {
     print number;
     println " is bigger than 2";
-endif
+}
 ```
 
 ---
@@ -135,15 +121,15 @@ wait number;
 
 # we also have comments, and this is a for loop
 set i = 1;
-for i to 10:
+for i to 10 {
     println i;
-    i++;
-endfor
+    i = i + 1;
+}
 
-if number > 2:
+if number > 2 {
     print number;
     println " is bigger than 2";
-endif
+}
 
 println "Creating the folders...";
 wait 2;
@@ -161,11 +147,11 @@ wait 2;
 clear;
 wait 2;
 
-number += 2;
+number = number + 2;
 println number;
 
 remove "michael";
-if number > 2:
+if number > 2 {
     println "number is bigger than 2";
     set content = read_file "script";
     print content;
@@ -174,12 +160,12 @@ if number > 2:
     set user_input = read "Write something: ";
     println user_input;
 
-    number /= 2;
+    number = number / 2;
     println number;
 
     execute "vim";
     endprogram;
-endif
+}
 
 println "program has not ended";
 ```
@@ -188,14 +174,7 @@ println "program has not ended";
 ## Build And Run
 ```bash
 make  # compile the program
-./run <filename> # execute scripts
-```
-
-## For greeklish version you do
-```bash
-make greeklish
-./marion <filename>
-```
+./marion <filename> # execute scripts
 
 ---
 

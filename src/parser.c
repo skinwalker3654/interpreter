@@ -1,1443 +1,614 @@
-#include <stdio.h>
-#include <string.h>
-#include <unistd.h>
+#include "../header/parser.h"
+#include "../header/token.h"
 #include <stdlib.h>
-#include <sys/stat.h>
-#include <sys/wait.h>
-#include "parser.h"
-#include "lexer.h"
+#include <string.h>
+#include <stdio.h>
 
-void add_variable(Variables *ptr, char *varname, void *value, Variable_type type) {
-    strcpy(ptr->variablename[ptr->counter],varname);
-    if(type == INT) {
-        int number = *(int*)value;
-        ptr->intvalue[ptr->counter] = number;
-        ptr->type[ptr->counter] = INT;
-    } else {
-        strcpy(ptr->stringvalue[ptr->counter],(char*)value);
-        ptr->type[ptr->counter] = STRING;
+/* OWNER - SHIP*/
+Parser *parser_init(char *source) {
+    Parser *new_parser = malloc(sizeof(Parser));
+    if(!new_parser) {
+        printf("Error: Failed to create the parser\n");
+        return NULL;
     }
 
-    ptr->counter++;
+    new_parser->lx = lexer_create(source);
+    if(!new_parser->lx) {
+        printf("Failed to initialize the lexer\n");
+        free(new_parser);
+        return NULL;
+    }
+
+    new_parser->current = token_get_next(new_parser->lx);
+    if(!new_parser->current) {
+        printf("Failed to get the first token\n");
+        lexer_destroy(new_parser->lx);
+        free(new_parser);
+        return NULL;
+    }
+
+    return new_parser;
 }
 
-int print_variable(Variables *ptr, char *varname,Print_type type) {
-    int found = -1;
-    for(int i=0; i<ptr->counter; i++) {
-        if(strcmp(ptr->variablename[i],varname)==0) {
-            found = i;
-            if(ptr->type[i] == INT) {
-                if(type == PRINT) {
-                    printf("%d",ptr->intvalue[i]);
-                    return 0;
-                } else if(type == PRINTLN) {
-                    printf("%d\n",ptr->intvalue[i]);
-                    return 0;
-                }
+void parser_destroy(Parser *ps) {
+    if(!ps) return;
 
-                return -1;
-            } else if(ptr->type[i] == STRING){
-                if(type == PRINT) {
-                    printf("%s",ptr->stringvalue[i]);
-                    return 0;
-                } else if(type == PRINTLN) {
-                    printf("%s\n",ptr->stringvalue[i]);
-                    return 0;
-                }
+    lexer_destroy(ps->lx);
+    token_destroy(ps->current);
 
-                return -1;
-            }
-        }
-    }
-
-    if(found == -1) {
-        printf("Error: Variable %s not found\n",varname);
-        return -1;
-    }
-
-    return -1;
+    free(ps);
+    ps = NULL;
 }
 
-void wait_seconds(int seconds) {
-    sleep(seconds);
+/* PARSER - API */
+static int match(Parser *ps, Tok_type type) {
+    if(!ps) return 0;
+    return ps->current->type == type;
 }
 
-int parse_code(Parser *ptr,Variables *var) {
-    ptr->current_token = get_next_token(&ptr->lexer);
-    if(ptr->current_token.type == TOKEN_EOF) return 0;
+static int advance(Parser *ps) {
+    token_destroy(ps->current);
+    ps->current = token_get_next(ps->lx);
+    if(ps->current == NULL) return 0;
+    return 1;
+}
 
-    if(ptr->current_token.type == TOKEN_EXECUTE) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_VARIABLE) {
-            printf("Error %d:%d -> Invalid value to run '%s'",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_STRING) {
-            char program[256];
-            strcpy(program,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> you forgot to put a semicolon ';'\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            pid_t process = fork();
-            if(process == -1) {
-                printf("Error -> program '%s' not found\n",program);
-                return -1;
-            }
-
-            if(process == 0) {
-                char *args[] = {program,NULL};
-                execvp(program,args);
-            } else {
-                wait(NULL);
-                return 0;
-            }
-
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_VARIABLE) {
-            char variable[256];
-            strcpy(variable,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> you forgot to put a semicolon ';'\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            int found = -1;
-            for(int i=0; i<var->counter; i++) {
-                if(strcmp(var->variablename[i],variable)==0) {
-                    found = i;
-                    if(var->type[i] != STRING) {
-                        printf("Error %d:%d -> variable '%s' is an integer\n",ptr->current_token.line,ptr->current_token.column,variable);
-                        return -1;
-                    }
-                    break;
-                }
-            }
-
-            if(found == -1) {
-                printf("Error %d:%d -> variable '%s' not found\n",ptr->current_token.line,ptr->current_token.column,variable);
-                return -1;
-            }
-            
-            pid_t process = fork();
-            if(process == -1) {
-                printf("Error -> program '%s' not found\n",var->stringvalue[found]);
-                return -1;
-            }
-
-            if(process == 0) {
-                char *args[] = {var->stringvalue[found],NULL};
-                execvp(args[0],args);
-            } else {
-                wait(NULL);
-                return 0;
-            }
-
-            return -1;
-        }
-    }
-
-    if(ptr->current_token.type == TOKEN_ENDPROGRAM) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_SEMICOLON) {
-            printf("Error %d:%d -> Forgot a semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
-            return -1;
-        }
-
-        exit(EXIT_SUCCESS);
-    }
-
-    if(ptr->current_token.type == TOKEN_CLEAR) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_SEMICOLON) {
-            printf("Error %d:%d -> Forgot to put a semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
-            return -1;
-        }
-
-        system("clear");
+static int consum(Parser *ps, Tok_type type, const char *msg) {
+    if(!match(ps,type)) {
+        printf("Line %d: Parse error: %s\n",ps->lx->line,msg);
         return 0;
     }
 
-    if(ptr->current_token.type == TOKEN_REMOVE) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_STRING) {
-            printf("Error %d:%d -> Invalid folder name or file name to remove '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
-        }
+    if(advance(ps)==0) return 0;
+    return 1;
+}
 
-        if(ptr->current_token.type == TOKEN_VARIABLE) {
-            int found = -1;
-            for(int i=0; i<var->counter; i++) {
-                if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                    found = i;
-                    break;
-                }
-            }
+static Expr *parse_additive(Parser *ps);
+static Expr *parse_multiplicative(Parser *ps);
+static Expr *parse_primary(Parser *ps);
 
-            if(found == -1) {
-                printf("Error %d:%d -> Variable '%s does not exists\n'",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-
-            if(var->type[found] == INT) {
-                printf("Error %d:%d -> Variable '%s' is an integer not a string\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot to put the ';' at the end\n'",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            int check = remove(var->stringvalue[found]);
-            if(check == -1) {
-                printf("Error: Failed to remove  the folder or file with name '%s'\n",var->stringvalue[found]);
-                return -1;
-            }
-
-            return 0;
-        }
-
-        if(ptr->current_token.type == TOKEN_STRING) {
-            char stringvalue[200];
-            strcpy(stringvalue,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            int check = remove(stringvalue);
-            if(check == -1) {
-                printf("Error: Failed to remove the folder or file with name '%s'\n",stringvalue);
-                return -1;
-            }
-
-            return 0;
-        }
-
-        return -1;
+static Expr *parse_primary(Parser *ps) {
+    if(match(ps, TOK_NUM_LIT)) {
+        Expr *ex = expr_new_int(atol(ps->current->value));
+        advance(ps);
+        return ex;
     }
 
-    if(ptr->current_token.type == TOKEN_MKDIR) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_STRING) {
-            printf("Error %d:%d -> Invalid folder name to create '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
+    if(match(ps,TOK_LPAR)) {
+        advance(ps);
+        Expr *ex = parser_parse_expr(ps);
+        if(!consum(ps,TOK_RPAR,"Expected ')'")) {
+            expr_destroy(ex);
+            return NULL;
         }
 
-        if(ptr->current_token.type == TOKEN_VARIABLE) {
-            int found = -1;
-            for(int i=0; i<var->counter; i++) {
-                if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                    found = i;
-                    break;
-                }
-            }
-
-            if(found == -1) {
-                printf("Error %d:%d -> Variable '%s does not exists\n'",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-
-            if(var->type[found] == INT) {
-                printf("Error %d:%d -> Variable '%s' is an integer not a string\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot to put the ';' at the end\n'",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            int check = mkdir(var->stringvalue[found],0755);
-            if(check == -1) {
-                printf("Error: Failed to create the folder with name '%s'\n",var->stringvalue[found]);
-                return -1;
-            }
-
-            return 0;
-        }
-
-        if(ptr->current_token.type == TOKEN_STRING) {
-            char stringvalue[200];
-            strcpy(stringvalue,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            int check = mkdir(stringvalue,0755);
-            if(check == -1) {
-                printf("Error: Failed to create the folder with name '%s'\n",stringvalue);
-                return -1;
-            }
-
-            return 0;
-        }
-
-        return -1;
+        return ex;
     }
 
-    if(ptr->current_token.type == TOKEN_VARIABLE) {
-        int found = -1;
-        for(int i=0; i<var->counter; i++) {
-            if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                found = i;
-                break;
-            }
-        }
-
-        if(found == -1) {
-            printf("Error %d:%d -> This variable does not exists\n",ptr->current_token.line,ptr->current_token.column);
-            return -1;
-        }
-
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_EQUAL && ptr->current_token.type != TOKEN_INCREASE 
-                && ptr->current_token.type != TOKEN_DECREASE && ptr->current_token.type != TOKEN_PLUS_EQUAL && ptr->current_token.type != TOKEN_MINUS_EQUAL
-                && ptr->current_token.type != TOKEN_STAR_EQUAL && ptr->current_token.type != TOKEN_SLASH_EQUAL) {
-            printf("Error %d:%d -> Invalid variable assigment '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_PLUS_EQUAL) {
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_VARIABLE) {
-                printf("Error %d:%d -> Invalid value to increase the variable '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-
-            if(ptr->current_token.type == TOKEN_NUMBER) {
-                char number[256];
-                strcpy(number,ptr->current_token.value);
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] += atoi(number);
-                return 0;
-            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
-                int foundVar = -1;
-                for(int i=0; i<var->counter; i++) {
-                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                        foundVar = i;
-                        break;
-                    }
-                }
-
-                if(foundVar == -1) {
-                    printf("Error %d:%d -> This variale does not exists to use it as an increase value -> '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
-
-                if(var->type[found] != INT) {
-                    printf("Error %d:%d -> Variable '%s' is not an integer to use it as an increase value\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] += var->intvalue[foundVar];
-                return 0;
-            }
-
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_MINUS_EQUAL) {
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
-                printf("Erro %d:%d -> Invalid value to decrease the variable '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-
-            if(ptr->current_token.type == TOKEN_NUMBER) {
-                char number[256];
-                strcpy(number,ptr->current_token.value);
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] -= atoi(number);
-                return 0;
-            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
-                int foundVar = -1;
-                for(int i=0; i<var->counter; i++) {
-                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                        foundVar = i;
-                        break;
-                    }
-                }
-
-                if(foundVar == -1) {
-                    printf("Error %d:%d -> This variale does not exists to use it as an decrease value -> '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
-
-                if(var->type[found] != INT) {
-                    printf("Error %d:%d -> Variable '%s' is not an integer to use it as an decrease value\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] -= var->intvalue[foundVar];
-                return 0;
-            }
-            
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_STAR_EQUAL) {
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
-                printf("Erro %d:%d -> Invalid value to multiply the variable '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-
-            if(ptr->current_token.type == TOKEN_NUMBER) {
-                char number[256];
-                strcpy(number,ptr->current_token.value);
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] *= atoi(number);
-                return 0;
-            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
-                int foundVar = -1;
-                for(int i=0; i<var->counter; i++) {
-                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                        foundVar = i;
-                        break;
-                    }
-                }
-
-                if(foundVar == -1) {
-                    printf("Error %d:%d -> This variale does not exists to use it as an multiplication value -> '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
-
-                if(var->type[found] != INT) {
-                    printf("Error %d:%d -> Variable '%s' is not an integer to use it as an multiplication value\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] *= var->intvalue[foundVar];
-                return 0;
-            }
-            
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_SLASH_EQUAL) {
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
-                printf("Erro %d:%d -> Invalid value to divide the variable '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-
-            if(ptr->current_token.type == TOKEN_NUMBER) {
-                char number[256];
-                strcpy(number,ptr->current_token.value);
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                if(atoi(number) == 0) {
-                    printf("Error %d:%d -> The second number is 0 on a division expresion. Thats invalid\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] /= atoi(number);
-                return 0;
-            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
-                int foundVar = -1;
-                for(int i=0; i<var->counter; i++) {
-                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                        foundVar = i;
-                        break;
-                    }
-                }
-
-                if(foundVar == -1) {
-                    printf("Error %d:%d -> This variale does not exists to use it as an division value -> '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
-
-                if(var->type[found] != INT) {
-                    printf("Error %d:%d -> Variable '%s' is not an integer to use it as an division value\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot to put the ';' at the end\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                if(var->intvalue[foundVar] == 0) {
-                    printf("Error %d:%d -> The second number is 0 on a division expresion. Thats invalid\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] /= var->intvalue[foundVar];
-                return 0;
-            }
-            
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_INCREASE) {
-            if(var->type[found] != INT) {
-                printf("Error %d:%d Cannot increase a string variable\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            var->intvalue[found]++;
-            return 0;
-        }
-
-        if(ptr->current_token.type == TOKEN_DECREASE) {
-            if(var->type[found] != INT) {
-                printf("Error %d:%d Cannot decrease a string variable\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            var->intvalue[found]--;
-            return 0;
-        }
-
-        if(ptr->current_token.type == TOKEN_EQUAL) {
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_NUMBER) {
-                printf("Error %d:%d -> Invalid variable value '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-            
-            if(ptr->current_token.type == TOKEN_STRING) {
-                if(var->type[found] != STRING) {
-                    printf("Error %d:%d This variable is string and you havent assinged a string on it\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                strcpy(var->stringvalue[found],ptr->current_token.value);
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                return 0;
-            } else if(ptr->current_token.type == TOKEN_NUMBER) {
-                if(var->type[found] != INT) {
-                    printf("Error %d:%d This variable is integer and you havent assinged an integer\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                var->intvalue[found] = atoi(ptr->current_token.value);
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                return 0;
-            }
-
-            return -1;
-        }
+    if(match(ps,TOK_IDENT_LIT)) {
+        Expr *ex = expr_new_ident(ps->current->value);
+        advance(ps);
+        return ex;
     }
 
-    if(ptr->current_token.type == TOKEN_PRINT) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_VARIABLE) {
-            printf("Error %d:%d -> Invalid value to print %s\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_STRING) {
-            char value[200];
-            strcpy(value,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            printf("%s",value);
-            return 0;
-        }
-
-        if(ptr->current_token.type == TOKEN_VARIABLE) {
-            char value[200];
-            strcpy(value,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            if(print_variable(var,value,PRINT)==0) return 0;
-            else return -1;
-        }
-
-        return -1;
+    if(match(ps,TOK_STR_LIT)) {
+        Expr *ex = expr_new_str(ps->current->value);
+        advance(ps);
+        return ex;
     }
 
-    if(ptr->current_token.type == TOKEN_PRINTLN) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_VARIABLE) {
-            printf("Error %d:%d -> Invalid value to print %s\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
+    if(match(ps,TOK_DIABASE)) {
+        advance(ps);
+
+        if(!match(ps,TOK_ARI8MO) && !match(ps,TOK_MHNHMA)) {
+            printf("Error line %d: Expected 'ari8mo' or 'mhnhma' before getting the input",ps->lx->line);
+            return NULL;
         }
 
-        if(ptr->current_token.type == TOKEN_STRING) {
-            char string[200];
-            strcpy(string,ptr->current_token.value);
+        Read_type type;
+        if(match(ps,TOK_ARI8MO))
+            type = READ_NUM;
+        else 
+            type = READ_BUFF;
 
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            printf("%s\n",string);
-            return 0;
+        advance(ps);
+        if(!match(ps,TOK_STR_LIT)) {
+            printf("Error line %d: Expected 'prompt' in a string form\n",ps->lx->line);
+            return NULL;
         }
 
-        if(ptr->current_token.type == TOKEN_VARIABLE) {
-            char value[200];
-            strcpy(value,ptr->current_token.value);
+        char *prompt = strdup(ps->current->value);
+        advance(ps);
 
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            if(print_variable(var,value,PRINTLN)==0) return 0;
-            else return -1;
-        }
-
-        return -1;
+        Expr *ex = expr_new_read(prompt,type);
+        free(prompt);
+        return ex;
     }
 
-    if(ptr->current_token.type == TOKEN_SET) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_VARIABLE) {
-            printf("Error %d:%d -> Invalid variable name '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
+    if(match(ps,TOK_DIABASE_ARXEIO)) {
+        advance(ps);
+
+        Expr *ex = parser_parse_expr(ps);
+        if(!ex) return NULL;
+
+        if(ex->type == EXPR_INT || ex->type == EXPR_BIN || ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
+            printf("Error line %d: Cannot pass integers at diabase_arxeio\n",ps->lx->line);
+            expr_destroy(ex);
+            return NULL;
         }
 
-        char varname[200];
-        strcpy(varname,ptr->current_token.value);
-
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_EQUAL) {
-            printf("Error %d:%d -> Forgot the assigment with '='\n",ptr->current_token.line,ptr->current_token.column);
-            return -1;
-        }
-
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_STRING && ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_READ_FILE && ptr->current_token.type != TOKEN_READ) {
-            printf("Error %d:%d -> Invalid variable value '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
-        }
-
-        if(ptr->current_token.type == TOKEN_READ) {
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type == TOKEN_INT) {
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_STRING) {
-                    printf("Error %d:%d -> Message must be inside of -> \" \"\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                char message[256];
-                strcpy(message,ptr->current_token.value);
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                    printf("Error %d:%d -> You forgot the semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                char buffer[256];
-                printf("%s",message);
-                fgets(buffer,sizeof(buffer),stdin);
-                buffer[strcspn(buffer,"\n")] = 0;
-
-                char *endPtr;
-                int number = strtol(buffer,&endPtr,10);
-                if(*endPtr != '\0') {
-                    printf("Error %d:%d You should put an int value instead\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                add_variable(var,varname,&number,INT);
-                return 0;
-            }
-
-            if(ptr->current_token.type != TOKEN_STRING) {
-                printf("Error %d:%d -> Message must be inside of -> \" \"\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            char message[256];
-            strcpy(message,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> You forgot the semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            char buffer[256];
-            printf("%s",message);
-            fgets(buffer,sizeof(buffer),stdin);
-            buffer[strcspn(buffer,"\n")] = 0;
-
-            add_variable(var,varname,buffer,STRING);
-            return 0;
-        }
-
-        if(ptr->current_token.type == TOKEN_READ_FILE) {
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_STRING) {
-                printf("Error %d:%d -> file name must be inside of -> \" \"\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            char file[256];
-            strcpy(file,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> You forgot the semicolon at the end ';'\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            FILE *f = fopen(file,"r");
-            if(!f) {
-                printf("Error %d:%d -> Failed to read the file %s\n",ptr->current_token.line,ptr->current_token.column,file);
-                return -1;
-            }
-
-            fseek(f,0,SEEK_END);
-            int size = ftell(f);
-            rewind(f);
-
-            char buffer[size+1];
-            int len = fread(buffer,1,size,f);
-            buffer[len] = '\0';
-            fclose(f);
-
-            add_variable(var,varname,buffer,STRING);
-            return 0;
-        }
-
-        if(ptr->current_token.type == TOKEN_STRING) {
-            add_variable(var,varname,ptr->current_token.value,STRING);
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            return 0;
-        }
-
-        if(ptr->current_token.type == TOKEN_NUMBER) {
-            int number = atoi(ptr->current_token.value);
-            add_variable(var,varname,&number,INT);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            return 0;
-        }
-
-        return -1;
+        return expr_new_read_file(ex);
     }
-    
-    if(ptr->current_token.type == TOKEN_WAIT) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_VARIABLE) {
-            printf("Error %d:%d -> Timer accepts only int variables or numebrs not strings\n",ptr->current_token.line,ptr->current_token.column);
-            return -1;
-        }
 
-        if(ptr->current_token.type == TOKEN_VARIABLE) {
-            int found = -1;
-            for(int i=0; i<var->counter; i++) {
-                if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                    found = i;
-                    if(var->type[i] != INT) {
-                        printf("Error %d:%d -> Timer accepts only integer variables\n",ptr->current_token.line,ptr->current_token.column);
-                        return -1;
-                    }
-                }
-            }
+    printf("Error line %d: Expected an expression\n",ps->lx->line);
+    return NULL;
+}
 
-            if(found == -1) {
-                printf("Error %d:%d -> Variable %s not found\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
+static Expr *parse_additive(Parser *ps) {
+    Expr *left = parse_multiplicative(ps);
+    if(!left) return NULL;
 
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return -1;
-            }
-
-            sleep(var->intvalue[found]);
-            return 0;
+    while(match(ps,TOK_PLUS) || match(ps,TOK_MINUS)) {
+        Binop_type op;
+        if(match(ps,TOK_PLUS)) {
+            op = OP_ADD;
+        } else if(match(ps,TOK_MINUS)) {
+            op = OP_SUB;
         } else {
-            char value[200];
-            strcpy(value,ptr->current_token.value);
-
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_SEMICOLON) {
-                printf("Error %d:%d -> Forgot the semicolon\n",ptr->current_token.line,ptr->current_token.column);
-                return 0;
-            }
-
-            int number = atoi(value);
-            wait_seconds(number);
-
-            return 0;
+            printf("Error line %d: Invalid arithmetic symbol '%c'\n",ps->lx->line,ps->lx->source[ps->lx->pos-1]);
+            expr_destroy(left);
+            return NULL;
         }
 
-        return -1;
+        advance(ps);
+        Expr *right = parse_multiplicative(ps);
+        if(!right) {
+            expr_destroy(left);
+            return NULL;
+        }
+
+        left = expr_new_bin(left, op, right);
+        if(!left) {
+            expr_destroy(right);
+            return NULL;
+        }
     }
 
-    if(ptr->current_token.type == TOKEN_IF) {
-        int line = ptr->current_token.line;
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_VARIABLE) {
-            printf("Error %d:%d -> Invalid value for comparation '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
+    return left;
+}
+
+static Expr *parse_multiplicative(Parser *ps) {
+    Expr *left = parse_primary(ps);
+    if(!left) return NULL;
+
+    while(match(ps,TOK_STAR) || match(ps,TOK_SLASH)) {
+        Binop_type op;
+        if(match(ps,TOK_STAR)) {
+            op = OP_MUL;
+        } else if(match(ps,TOK_SLASH)) {
+            op = OP_DIV;
+        } else {
+            printf("Error line %d: Invalid arithmetic symbol '%c'\n",ps->lx->line,ps->lx->source[ps->lx->pos-1]);
+            expr_destroy(left);
+            return NULL;
         }
 
-        if(ptr->current_token.type == TOKEN_NUMBER) {
-            int number1 = atoi(ptr->current_token.value);
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type !=
-                    TOKEN_LESS &&
-                    ptr->current_token.type != TOKEN_GREATER
-                    && ptr->current_token.type != TOKEN_EQUAL_EQUAL
-                    && ptr->current_token.type != TOKEN_GREATER_EQUAL 
-                    && ptr->current_token.type != TOKEN_LESS_EQUAL) {
-                printf("Error %d:%d -> Invalid compare symbol '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
+        advance(ps);
+        Expr *right = parse_primary(ps);
+        if(!right) {
+            expr_destroy(left);
+            return NULL;
+        }
 
-            char symbol[3];
-            strcpy(symbol,ptr->current_token.value);
+        left = expr_new_bin(left, op, right);
+        if(!left) {
+            expr_destroy(right);
+            return NULL;
+        }
+    }
 
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_VARIABLE) {
-                printf("Error %d:%d -> 2nd value is invalid for comparation '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
+    return left;
+}
 
-            if(ptr->current_token.type == TOKEN_NUMBER) {
-                int number2 = atoi(ptr->current_token.value);
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_COLON) {
-                    printf("Error %d:%d -> Forgot the colon ':'\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
+Expr *parser_parse_expr(Parser *ps) {
+    return parse_additive(ps);
+}
 
-                char block[1024];
-                int counter = 0;
+/* COND - API */
+static Cond_type tok_type_to_cond(Parser *ps) {
+    switch(ps->current->type) {
+        case TOK_EQEQ:
+            return COND_EQEQ;
+        case TOK_GE:
+            return COND_GE;
+        case TOK_GT:
+            return COND_GT;
+        case TOK_LE:
+            return COND_LE;
+        case TOK_LT:
+            return COND_LT;
+        case TOK_NOT_EQ:
+            return COND_NOT_EQ;
+        default:
+            return -1;
+    }
+}
 
-                int found = -1;
-                while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endif", 5)==0) {
-                        found = 1;
-                        break;
-                    }
+Condition *parser_parse_cond(Parser *ps) {
+    Condition *cond;
 
-                    block[counter++] = ptr->lexer.source[ptr->lexer.pos++];
-                }
-            
+    Expr *left = parser_parse_expr(ps);
+    if(!left) {
+        expr_destroy(left);
+        return NULL;
+    }
 
+    if(ps->current->type != TOK_EQEQ 
+        && ps->current->type != TOK_GE
+        && ps->current->type != TOK_GT 
+        && ps->current->type != TOK_LE
+        && ps->current->type != TOK_LT
+        && ps->current->type != TOK_NOT_EQ) {
+        printf("Parser error line %d: invalid condition type. ",ps->lx->line);
+        expr_destroy(left);
+        return cond;
+    }
 
-                block[counter] = '\0';
-                if(found == -1) {
-                    printf("Error %d Forgot to close the if with endif\n",line);
-                    return -1;
-                } 
+    Cond_type type = tok_type_to_cond(ps);
+    advance(ps);
 
-                Parser parser = {0};
-                parser.lexer = lexer_init(block);
+    Expr *right = parser_parse_expr(ps);
+    if(!right) {
+        expr_destroy(left);
+        expr_destroy(right);
+        return NULL;
+    }
 
-                ptr->current_token = get_next_token(&ptr->lexer);
+    return cond_new(left, type, right);
+}
 
-                if(strcmp(symbol,"<")==0) {
-                    if(number1 < number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
+/* AST - API */
+Ast *parser_parse_metablhth(Parser *ps) {
+    if(!consum(ps,TOK_METABLHTH,"expected 'metablhth'"))
+        return NULL;
 
-                    return 0;
-                } else if(strcmp(symbol,">")==0) {
-                    if(number1 > number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
+    if(!match(ps,TOK_IDENT_LIT)) {
+        printf("Error line %d: expected variable name\n",ps->lx->line);
+        return NULL;
+    }
 
-                    return 0;
-                } else if(strcmp(symbol,"==")==0) {
-                    if(number1 == number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
+    char *name = strdup(ps->current->value);
+    if(!name) return NULL;
 
-                    return 0;
-                } else if(strcmp(symbol,">=")==0) {
-                    if(number1 >= number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
+    advance(ps);
 
-                    return 0;
-                } else if(strcmp(symbol,"<=")==0) {
-                    if(number1 <= number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
+    if(!consum(ps,TOK_ASSIGN,"expected '='")) {
+        free(name);
+        return NULL;
+    }
 
-                    }
+    Expr *ex = parser_parse_expr(ps);
+    if(!ex) return NULL;
 
-                    return 0;
-                }
-            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
-                int found = -1;
-                for(int i=0; i<var->counter; i++) {
-                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                        found = i;
-                        break;
-                    }
-                }
+    if(!consum(ps,TOK_SEMI,"expected ';' at the end of metablhth")) {
+        expr_destroy(ex);
+        free(name);
+        return NULL;
+    }
 
-                if(found == -1) {
-                    printf("Error %d:%d -> This variable does not exists '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
+    Ast *new = ast_new_metablhth(name,ex);
+    free(name);
 
-                if(var->type[found] != INT) {
-                    printf("Error %d:%d -> This variable is not an integer '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
+    return new;
+}
 
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_COLON) {
-                    printf("Error %d:%d -> Forgot to put the colon ':'\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
+Ast *parser_parse_var_assign(Parser *ps) {
+    if(!match(ps,TOK_IDENT_LIT)) {
+        printf("Error line %d: expected variable name\n",ps->lx->line);
+        return NULL;
+    }
 
-                char block[1024];
-                int counter = 0;
+    char *name = strdup(ps->current->value);
+    if(!name) return NULL;
 
-                int foundIdx = -1;
-                while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endif", 5)==0) {
-                        foundIdx = 1;
-                        break;
-                    }
+    advance(ps);
 
-                    block[counter++] = ptr->lexer.source[ptr->lexer.pos++];
-                }
-            
+    if(!consum(ps,TOK_ASSIGN,"expected '='")) {
+        free(name);
+        return NULL;
+    }
 
+    Expr *ex = parser_parse_expr(ps);
+    if(!ex) return NULL;
 
-                block[counter] = '\0';
-                if(found == -1) {
-                    printf("Error %d Forgot to close the if with endif\n",line);
-                    return -1;
-                } 
+    if(!consum(ps,TOK_SEMI,"expected ';' at the end of metablhth")) {
+        expr_destroy(ex);
+        free(name);
+        return NULL;
+    }
 
-                Parser parser = {0};
-                parser.lexer = lexer_init(block);
+    Ast *new = ast_new_var_assign(name,ex);
+    free(name);
 
-                ptr->current_token = get_next_token(&ptr->lexer);
+    return new;
+}
 
-                if(strcmp(symbol,"<")==0) {
-                    if(number1 < var->intvalue[foundIdx]) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
+Ast *parser_parse_an(Parser *ps) {
+    if(!consum(ps,TOK_AN,"expected 'an'")) 
+        return NULL;
 
-                    return 0;
-                } else if(strcmp(symbol,">")==0) {
-                    if(number1 > var->intvalue[foundIdx]) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
+    Condition *cond = parser_parse_cond(ps);
 
-                    return 0;
-                } else if(strcmp(symbol,"==")==0) {
-                    if(number1 == var->intvalue[foundIdx]) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
+    if(!consum(ps,TOK_LBRA,"expected '{' at the condition")) {
+        cond_destroy(cond);
+        return NULL;
+    }
 
-                    return 0;
-                } else if(strcmp(symbol,">=")==0) {
-                    if(number1 >= var->intvalue[foundIdx]) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
+    Ast *body = NULL;
+    while(!match(ps,TOK_RBRA)) {
+        Ast *stmt = parser_parse_stmt(ps);
+        if(!stmt) {
+            ast_destroy(body);
+            cond_destroy(cond);
+            return NULL;
+        }
+        
+        ast_append(&body,stmt);
+    }
 
-                    return 0;
-                } else if(strcmp(symbol,"<=")==0) {
-                    if(number1 <= var->intvalue[foundIdx]) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
+    if(!consum(ps,TOK_RBRA,"expected '}' at the end of an")) {
+        ast_destroy(body);
+        return NULL;
+    }
 
-                    }
+    return ast_new_an(cond,body);
+}
 
-                    return 0;
-                }
-            }
-        } else if(ptr->current_token.type == TOKEN_VARIABLE) {
-            int found = -1;
-            for(int i=0; i<var->counter; i++) {
-                if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                    found = i;
-                    break;
-                }
-            }
+Ast *parser_parse_gia(Parser *ps) {
+    if(!consum(ps,TOK_GIA,"expected 'gia'")) 
+        return NULL;
 
-            if(found == -1) {
-                printf("Error %d:%d -> Variable '%s' does not exists\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-            
-            if(var->type[found] != INT) {
-                printf("Error %d:%d -> Variable '%s' is not an integer\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
+    Expr *from = parser_parse_expr(ps);
+    if(from->type == EXPR_STR) {
+        printf("Error line %d: cannot put strings on gia\n",ps->lx->line);
+        return NULL;
+    }
 
-            int number1 = var->intvalue[found];
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type !=
-                    TOKEN_EQUAL_EQUAL
-                    && ptr->current_token.type != TOKEN_LESS
-                    && ptr->current_token.type != TOKEN_LESS_EQUAL
-                    && ptr->current_token.type != TOKEN_GREATER
-                    && ptr->current_token.type != TOKEN_GREATER_EQUAL) {
-                printf("Error %d:%d -> Invalid comparation symbol '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
+    if(!consum(ps,TOK_EOS,"expected 'eos' at gia")) {
+        expr_destroy(from);
+        return NULL;
+    }
 
-            char symbol[3];
-            strcpy(symbol,ptr->current_token.value);
+    Expr *to = parser_parse_expr(ps);
+    if(from->type == EXPR_STR) {
+        printf("Error line %d: cannot put strings on gia\n",ps->lx->line);
+        expr_destroy(from);
+        return NULL;
+    }
 
-            ptr->current_token = get_next_token(&ptr->lexer);
-            if(ptr->current_token.type != TOKEN_NUMBER && ptr->current_token.type != TOKEN_VARIABLE) {
-                printf("Error %d:%d -> Invalid comparation value '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
+    if(!consum(ps,TOK_LBRA,"expected '{' at the condition")) {
+        expr_destroy(from);
+        expr_destroy(to);
+        return NULL;
+    }
 
-            if(ptr->current_token.type == TOKEN_NUMBER) {
-                int number2 = atoi(ptr->current_token.value);
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_COLON) {
-                    printf("Error %d:%d -> Forgot to put the colon ':'\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
+    Ast *body = NULL;
+    while(!match(ps,TOK_RBRA)) {
+        Ast *stmt = parser_parse_stmt(ps);
+        if(!stmt) {
+            ast_destroy(body);
+            expr_destroy(from);
+            expr_destroy(to);
+            return NULL;
+        }
+        
+        ast_append(&body,stmt);
+    }
 
-                char block[1024];
-                int counter = 0;
+    if(!consum(ps,TOK_RBRA,"expected '}' at the end of an")) {
+        ast_destroy(body);
+        expr_destroy(from);
+        expr_destroy(to);
+        return NULL;
+    }
 
-                int foundIdx = -1;
-                while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endif", 5)==0) {
-                        foundIdx = 1;
-                        break;
-                    }
+    return ast_new_gia(from,to,body);
+}
 
-                    block[counter++] = ptr->lexer.source[ptr->lexer.pos++];
-                }
-            
+Ast *parser_parse_print(Parser *ps) {
+    if(!consum(ps,TOK_PRINT,"expected 'print'\n"))
+        return NULL;
 
-                block[counter] = '\0';
-                if(found == -1) {
-                    printf("Error %d Forgot to close the if with endif\n",line);
-                    return -1;
-                } 
+    Expr *ex = parser_parse_expr(ps);
+    if(!ex) return NULL;
 
-                Parser parser = {0};
-                parser.lexer = lexer_init(block);
+    if(ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
+        printf("Error line %d: cannot put diabase_arxeio or diabse on printent\n",ps->lx->line);
+        expr_destroy(ex);
+        return NULL;
+    }
 
-                ptr->current_token = get_next_token(&ptr->lexer);
-
-                if(strcmp(symbol,"<")==0) {
-                    if(number1 < number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
-
-                    return 0;
-                } else if(strcmp(symbol,">")==0) {
-                    if(number1 > var->intvalue[foundIdx]) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
-
-                    return 0;
-                } else if(strcmp(symbol,"==")==0) {
-                    if(number1 == number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
-
-                    return 0;
-                } else if(strcmp(symbol,">=")==0) {
-                    if(number1 >= number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
-
-                    return 0;
-                } else if(strcmp(symbol,"<=")==0) {
-                    if(number1 <= number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
+    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+        expr_destroy(ex);
+        return NULL;
+    }
     
-                    }
+    return ast_new_print(ex);
+}
 
-                    return 0;
-                }
-            } else if(ptr->current_token.type == TOKEN_VARIABLE) {
-                int found = -1;
-                for(int i=0; i<var->counter; i++) {
-                    if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                        found = i;
-                        break;
-                    }
-                }
+Ast *parser_parse_printent(Parser *ps) {
+    if(!consum(ps,TOK_PRINTENT,"expected 'printent'\n"))
+        return NULL;
 
-                if(found == -1) {
-                    printf("Error %d:%d -> Variable '%s' does not exists\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
+    Expr *ex = parser_parse_expr(ps);
+    if(!ex) return NULL;
 
-                if(var->type[found] != INT) {
-                    printf("Error %d:%d -> Variable '%s' is not an integer\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                    return -1;
-                }
+    if(ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
+        printf("Error line %d: cannot put diabase_arxeio or diabse on printent\n",ps->lx->line);
+        expr_destroy(ex);
+        return NULL;
+    }
 
-                int number2 = var->intvalue[found];
-                ptr->current_token = get_next_token(&ptr->lexer);
-                if(ptr->current_token.type != TOKEN_COLON) {
-                    printf("Error %d:%d -> Forgot to put the colon ':'\n",ptr->current_token.line,ptr->current_token.column);
-                    return -1;
-                }
-
-                char block[1024];
-                int counter = 0;
-
-                int foundIdx = -1;
-                while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-                    if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endif", 5)==0) {
-                        foundIdx = 1;
-                        break;
-                    }
-
-                    block[counter++] = ptr->lexer.source[ptr->lexer.pos++];
-                }
-            
-
-                block[counter] = '\0';
-                if(found == -1) {
-                    printf("Error %d Forgot to close the if with endif\n",line);
-                    return -1;
-                } 
-
-                Parser parser = {0};
-                parser.lexer = lexer_init(block);
-
-                ptr->current_token = get_next_token(&ptr->lexer);
-
-                if(strcmp(symbol,"<")==0) {
-                    if(number1 < number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
-
-                    return 0;
-                } else if(strcmp(symbol,">")==0) {
-                    if(number1 > var->intvalue[foundIdx]) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
-
-                    return 0;
-                } else if(strcmp(symbol,"==")==0) {
-                    if(number1 == number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
-
-                    return 0;
-                } else if(strcmp(symbol,">=")==0) {
-                    if(number1 >= number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
-                    }
-
-                    return 0;
-                } else if(strcmp(symbol,"<=")==0) {
-                    if(number1 <= number2) {
-                        while(parser.current_token.type != TOKEN_EOF) {
-                            if(parse_code(&parser,var)==-1) {
-                                return -1;
-                            }
-                        }
+    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+        expr_destroy(ex);
+        return NULL;
+    }
     
-                    }
+    return ast_new_printent(ex);
+}
 
-                    return 0;
-                }
-            }
-        } 
+Ast *parser_parse_perimene(Parser *ps) {
+    if(!consum(ps,TOK_PERIMENE,"expected 'perimene'\n"))
+        return NULL;
+
+    Expr *ex = parser_parse_expr(ps);
+    if(!ex) return NULL;
+
+    if(ex->type == EXPR_STR || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE) {
+        printf("Error line %d: cannot put string\n",ps->lx->line);
+        expr_destroy(ex);
+        return NULL;
     }
 
-    if(ptr->current_token.type == TOKEN_FOR) {
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
-            printf("Error %d:%d -> Invalid counter '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
-        }
-
-        int line = ptr->current_token.line;
-        int stating_point;
-        if(ptr->current_token.type == TOKEN_VARIABLE) {
-            int found = -1;
-            for(int i=0; i<var->counter; i++) {
-                if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                    found = i;
-                    stating_point = var->intvalue[i];
-                    break;
-                }
-            }
-
-            if(found == -1) {
-                printf("Error %d:%d -> Variable '%s' not found\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-        } else if(ptr->current_token.type == TOKEN_NUMBER) {
-            stating_point = atoi(ptr->current_token.value);
-        }
-
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_TO) {
-            printf("Error %d:%d -> Forgot to put 'to'\n",ptr->current_token.line,ptr->current_token.column);
-            return -1;
-        }
-
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_VARIABLE && ptr->current_token.type != TOKEN_NUMBER) {
-            printf("Error %d:%d -> Invalid counter '%s'\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-            return -1;
-        }
-
-        int ending_point;
-        if(ptr->current_token.type == TOKEN_VARIABLE) {
-            int found = -1;
-            for(int i=0; i<var->counter; i++) {
-                if(strcmp(var->variablename[i],ptr->current_token.value)==0) {
-                    found = i;
-                    ending_point = var->intvalue[i];
-                    break;
-                }
-            }
-
-            if(found == -1) {
-                printf("Error %d:%d -> Variable '%s' not found\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-                return -1;
-            }
-        } else if(ptr->current_token.type == TOKEN_NUMBER) {
-            ending_point = atoi(ptr->current_token.value);
-        }
-
-        ptr->current_token = get_next_token(&ptr->lexer);
-        if(ptr->current_token.type != TOKEN_COLON) {
-            printf("Error %d:%d -> Forgot to put the colon ':'\n",ptr->current_token.line,ptr->current_token.column);
-            return -1;
-        }
-
-        char block[1024];
-        int counter = 0;
-
-        int found = -1;
-        while(ptr->lexer.source[ptr->lexer.pos] != '\0') {
-            if(strncmp(&ptr->lexer.source[ptr->lexer.pos],"endfor", 6)==0) {
-                found = 1;
-                break;
-            }
-
-            block[counter++] = ptr->lexer.source[ptr->lexer.pos++];
-        }
+    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+        expr_destroy(ex);
+        return NULL;
+    }
+    
+    return ast_new_perimene(ex);
+}
 
 
-        block[counter] = '\0';
-        if(found == -1) {
-            printf("Error %d Forgot to close the for loop with endfor\n",line);
-            return -1;
-        }
+Ast *parser_parse_sbyse(Parser *ps) {
+    if(!consum(ps,TOK_SBYSE,"expected 'sbyse'\n"))
+        return NULL;
 
-        Parser parser = {0};
-        parser.lexer = lexer_init(block);
+    Expr *ex = parser_parse_expr(ps);
+    if(!ex) return NULL;
 
-        ptr->current_token = get_next_token(&ptr->lexer);
-
-        if(stating_point < ending_point) {
-            for(int i=stating_point; i<=ending_point; i++) {
-                parser.lexer.pos = 0;
-                parser.current_token.type = TOKEN_ERROR;
-
-                while(parser.current_token.type != TOKEN_EOF) {
-                    if(parse_code(&parser,var)==-1) {
-                        return -1;
-                    }
-                }
-            }
-        } else if(stating_point > ending_point) {
-            for(int i=stating_point; i>=ending_point; i--) {
-                parser.lexer.pos = 0;
-                parser.current_token.type = TOKEN_ERROR;
-
-                while(parser.current_token.type != TOKEN_EOF) {
-                    if(parse_code(&parser,var)==-1) {
-                        return -1;
-                    }
-                }
-            }
-        }
-
-        return 0;
+    if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN) {
+        printf("Error line %d: cannot put number\n",ps->lx->line);
+        expr_destroy(ex);
+        return NULL;
     }
 
-    printf("Error %d:%d -> Invalid start %s\n",ptr->current_token.line,ptr->current_token.column,ptr->current_token.value);
-    return -1;
- }
+    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+        expr_destroy(ex);
+        return NULL;
+    }
+    
+    return ast_new_sbyse(ex);
+}
+
+
+Ast *parser_parse_treje(Parser *ps) {
+    if(!consum(ps,TOK_TREJE,"expected 'treje'\n"))
+        return NULL;
+
+    Expr *ex = parser_parse_expr(ps);
+    if(!ex) return NULL;
+
+    if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN) {
+        printf("Error line %d: cannot put number\n",ps->lx->line);
+        expr_destroy(ex);
+        return NULL;
+    }
+
+    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+        expr_destroy(ex);
+        return NULL;
+    }
+    
+    return ast_new_treje(ex);
+}
+
+Ast *parser_parse_neosfakelos(Parser *ps) {
+    if(!consum(ps,TOK_NEOSFAKELOS,"expected 'treje'\n"))
+        return NULL;
+
+    Expr *ex = parser_parse_expr(ps);
+    if(!ex) return NULL;
+
+    if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN) {
+        printf("Error line %d: cannot put number\n",ps->lx->line);
+        expr_destroy(ex);
+        return NULL;
+    }
+
+    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+        expr_destroy(ex);
+        return NULL;
+    }
+    
+    return ast_new_neosfakelos(ex);
+}
+
+Ast *parser_parse_telosprograma(Parser *ps) {
+    if(!consum(ps,TOK_TELOS_PROGRAMA,"expected 'telosprograma'\n"))
+        return NULL;
+
+    if(!consum(ps,TOK_SEMI,"expected ';'")) {
+        return NULL;
+    }
+    
+    return ast_new_telosprograma();
+}
+
+
+Ast *parser_parse_ka8arise(Parser *ps) {
+    if(!consum(ps,TOK_KA8ARISE,"expected 'ka8arise'\n"))
+        return NULL;
+
+    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+        return NULL;
+    }
+    
+    return ast_new_ka8arise();
+}
+
+Ast *parser_parse_stmt(Parser *ps) {
+    if(match(ps,TOK_METABLHTH)) {
+        return parser_parse_metablhth(ps);
+    } else if(match(ps,TOK_IDENT_LIT)) {
+        return parser_parse_var_assign(ps);
+    } else if(match(ps,TOK_AN)) {
+        return parser_parse_an(ps);
+    } else if(match(ps,TOK_GIA)) {
+        return parser_parse_gia(ps);
+    } else if(match(ps,TOK_PRINT)) {
+        return parser_parse_print(ps);
+    } else if(match(ps,TOK_PRINTENT)) {
+        return parser_parse_printent(ps);
+    } else if(match(ps,TOK_PERIMENE)) {
+        return parser_parse_perimene(ps);
+    } else if(match(ps,TOK_SBYSE)) {
+        return parser_parse_sbyse(ps);
+    } else if(match(ps,TOK_TREJE)) {
+        return parser_parse_treje(ps);
+    } else if(match(ps,TOK_NEOSFAKELOS)) {
+        return parser_parse_neosfakelos(ps);
+    } else if(match(ps,TOK_TELOS_PROGRAMA)) {
+        return parser_parse_telosprograma(ps);
+    } else if(match(ps,TOK_KA8ARISE)) {
+        return parser_parse_ka8arise(ps);
+    } else {
+        printf("Error: Inexprid value to start '%s'\n",ps->current->value);
+        advance(ps);
+        return NULL;
+    }
+}
+
+Ast *parser_parse_program(Parser *ps) {
+    Ast *head = NULL;
+    while(ps->current->type != TOK_EOF) {
+        Ast *new = parser_parse_stmt(ps);
+        if(!new) {
+            ast_destroy(head);
+            return NULL;
+        }
+
+        ast_append(&head, new);
+    }
+
+    return head;
+}
