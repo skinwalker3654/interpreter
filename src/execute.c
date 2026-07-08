@@ -119,6 +119,7 @@ int execute_metablhth(Ast *ast, Variable_list *list) {
 
     FILE *fp;
     Value v;
+    fflush(stdout);
     switch(ast->data.metablhth.expr->type) {
         case EXPR_READ:
             switch(ast->data.metablhth.expr->read.type) {
@@ -205,6 +206,7 @@ int execute_var_assign(Ast *ast, Variable_list *list) {
 
     FILE *fp;
     Value v;
+    fflush(stdout);
     switch(ast->data.var_assign.expr->type) {
         case EXPR_READ:
             switch(ast->data.var_assign.expr->read.type) {
@@ -287,6 +289,7 @@ int execute_var_assign(Ast *ast, Variable_list *list) {
 
 int execute_an(Ast *ast, Variable_list *list) {
     int result;
+    fflush(stdout);
     if(eval_condition(ast->data.an.cond,list)) {
         result = execute_program(ast->data.an.body,list);
         if(result == 1) return 1;
@@ -307,6 +310,7 @@ int execute_gia(Ast *ast, Variable_list *list) {
         return -1;
     }
 
+    fflush(stdout);
     for(int i=from.int_value; i<=to.int_value; i++) {
         int result = execute_program(ast->data.gia.body,list);
         if(result == 1) {
@@ -328,6 +332,7 @@ int execute_gia(Ast *ast, Variable_list *list) {
 
 int execute_print(Ast *ast, Variable_list *list) {
     Value v = eval_expr(list,ast->data.print.expr);
+    fflush(stdout);
     switch(v.type) {
         case VAL_INT:
             printf("%d",v.int_value);
@@ -345,6 +350,7 @@ int execute_print(Ast *ast, Variable_list *list) {
 
 int execute_printent(Ast *ast, Variable_list *list) {
     Value v = eval_expr(list,ast->data.print.expr);
+    fflush(stdout);
     switch(v.type) {
         case VAL_INT:
             printf("%d\n",v.int_value);
@@ -362,6 +368,7 @@ int execute_printent(Ast *ast, Variable_list *list) {
 
 
 int execute_perimene(Ast *ast, Variable_list *list) {
+    fflush(stdout);
     Value v = eval_expr(list,ast->data.print.expr);
     sleep(v.int_value);
     value_destroy(&v);
@@ -401,6 +408,7 @@ int execute_neosfakelos(Ast *ast, Variable_list *list) {
 
 int execute_treje(Ast *ast, Variable_list *list) {
     Value v = eval_expr(list,ast->data.treje.expr);
+    fflush(stdout);
     system(v.string_value);
     value_destroy(&v);
     return 0;
