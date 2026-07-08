@@ -137,7 +137,7 @@ wait 2;
 mkdir "FOLDER FOR PHOTOS";
 mkdir name;
 
-number++;
+number = number + 1;
 name = "john";
 
 println number;
