@@ -278,7 +278,10 @@ Ast *parser_parse_metablhth(Parser *ps) {
     }
 
     Expr *ex = parser_parse_expr(ps);
-    if(!ex) return NULL;
+    if(!ex) {
+        free(name);
+        return NULL;
+    }
 
     if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις ';' στο τέλος της metablhth")) {
         expr_destroy(ex);
@@ -309,7 +312,10 @@ Ast *parser_parse_var_assign(Parser *ps) {
     }
 
     Expr *ex = parser_parse_expr(ps);
-    if(!ex) return NULL;
+    if(!ex) {
+        free(name);
+        return NULL;
+    }
 
     if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις ';' στο τέλος της metablhth")) {
         expr_destroy(ex);
@@ -359,6 +365,8 @@ Ast *parser_parse_gia(Parser *ps) {
         return NULL;
 
     Expr *from = parser_parse_expr(ps);
+    if(!from) return NULL;
+
     if(from->type == EXPR_STR) {
         printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο gia πρέπει να βάλεις 2 αριθμούς ή μεταβλητές\n",ps->lx->line);
         return NULL;
@@ -370,6 +378,8 @@ Ast *parser_parse_gia(Parser *ps) {
     }
 
     Expr *to = parser_parse_expr(ps);
+    if(!to) return NULL;
+
     if(to->type == EXPR_STR) {
         printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο gia πρέπει να βάλεις 2 αριθμούς ή μεταβλητές\n",ps->lx->line);
         expr_destroy(from);
