@@ -11,4 +11,16 @@ clean:
 	@echo "removing executables..."
 	rm $(target)
 
-.PHONY: clean
+vim:
+	@echo "copying configurations for vim..."
+	mkdir -p ~/.vim/ftdetect
+	mkdir -p ~/.vim/syntax
+	cp configs/vim/ftdetect/marion.vim ~/.vim/ftdetect
+	cp configs/vim/syntax/marion.vim ~/.vim/syntax
+ 
+vimremove:
+	@echo "removing vim config..."
+	rm ~/.vim/ftdetect/marion.vim
+	rm ~/.vim/syntax/marion.vim
+
+.PHONY: clean vim

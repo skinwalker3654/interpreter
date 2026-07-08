@@ -181,12 +181,25 @@ println "program has not ended";
 ```bash
 make  # compile the program
 ./marion <filename> # execute scripts
+```
 
 ---
 
 ## clean executables
 ```bash
 make clean
+```
+
+---
+
+## Build IDE configurations
+```bash
+# for now it only supports vim hilighters for the language
+make vim
+# after you run this you should go and make a file with the .mar extension
+
+make vimremove
+# this deletes the vim configuration
 ```
 
 ---
