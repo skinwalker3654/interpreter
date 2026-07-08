@@ -382,7 +382,7 @@ int execute_sbyse(Ast *ast, Variable_list *list) {
 int execute_neosfakelos(Ast *ast, Variable_list *list) {
     Value v = eval_expr(list,ast->data.sbyse.expr);
     #ifdef _WIN32
-        if(mkdir(v.string_value)==-1) {
+        if(_mkdir(v.string_value)==-1) {
             printf("Error: Το πρόγραμα απέτηχε να δημιουργίσει τον φάκελο με όνομα '%s' σιγουρέψου οτι δεν υπάρχει ήδη αυτός ο φάκελος γτ το πρόγραμα δεν μπορεί να φτιάξει φάκελους με όνομα που ήδη υπάρχει στο σύστημα σου\n",v.string_value);
             value_destroy(&v);
             return -1;
