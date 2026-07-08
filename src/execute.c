@@ -41,7 +41,8 @@ static Value eval_binary(Variable_list *list, Expr *expr) {
             break;
     }
 
-    printf("Δέν υπάρχει αυτό το σύμβολο για αριθμητικές πράξης\n");
+    value_destroy(&left);
+    value_destroy(&right);
     return (Value){ .type = VAL_ERR };
 }
 
@@ -188,7 +189,7 @@ int execute_metablhth(Ast *ast, Variable_list *list) {
                     expr_destroy(ex);
                     break;
                 case VAL_ERR:
-                    printf("Εrror: Λάθος τιμή\n");
+                    printf("Εrror: Έβαλες μεταβλητή με μήνημα μεσα σε αριθμητική πράξη\n");
                     value_destroy(&v);
                     return -1;
             }
@@ -275,7 +276,7 @@ int execute_var_assign(Ast *ast, Variable_list *list) {
                     expr_destroy(ex);
                     break;
                 case VAL_ERR:
-                    printf("Error: Λάθος τιμή\n");
+                    printf("Εrror: Έβαλες μεταβλητή με μήνημα μεσα σε αριθμητική πράξη\n");
                     value_destroy(&v);
                     return -1;
             }
