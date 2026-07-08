@@ -209,4 +209,4 @@ Planned features:
 - Math library
 - more shell operations
 
-# interpiter
+# interpeter
