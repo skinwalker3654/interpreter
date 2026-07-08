@@ -11,6 +11,7 @@ typedef enum {
     TOK_EOS,
     TOK_ARI8MO,
     TOK_MHNHMA,
+    TOK_MHKOS,
 
     /* values */
     TOK_NUM_LIT,

@@ -57,6 +57,7 @@ static Value lookup_variable(Variable_list *list, char *name) {
 }
 
 static Value eval_expr(Variable_list *list, Expr *expr) {
+    Value v;
     switch(expr->type) {
         case EXPR_INT:
             return value_new_int(expr->int_value);
@@ -64,6 +65,17 @@ static Value eval_expr(Variable_list *list, Expr *expr) {
             return value_new_string(expr->str_value);
         case EXPR_IDENT:
             return lookup_variable(list, expr->ident);
+        case EXPR_MHKOS:
+            v = eval_expr(list,expr->mhkos.expr);
+            if(v.type == VAL_INT) {
+                printf("Error: Έβαλες μεταβλητή που έχει μέσα αριθμό στην εντολή μήκος. Μόνο μηνήματα ή μεταβλητές με μηνήματα μπαίνουν εκεί\n");
+                return (Value){.type=VAL_ERR};
+            }
+
+            Value val = value_new_int(strlen(v.string_value));
+            value_destroy(&v);
+
+            return val;
         case EXPR_BIN:
             return eval_binary(list, expr);
         default:

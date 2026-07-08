@@ -113,6 +113,9 @@ static Token *get_ident(Lexer *lx) {
     } else if(strcmp(buffer,"neosfakelos")==0 || strcmp(buffer,"mkdir")==0) {
         free(buffer);
         return token_create(TOK_NEOSFAKELOS,NULL);
+    } else if(strcmp(buffer,"mhkos")==0 || strcmp(buffer,"len")==0) {
+        free(buffer);
+        return token_create(TOK_MHKOS,NULL);
     } else {
         Token *tk = token_create(TOK_IDENT_LIT,buffer);
         free(buffer);

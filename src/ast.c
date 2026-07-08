@@ -84,6 +84,20 @@ Expr *expr_new_read_file(Expr *expr) {
     return ex;
 }
 
+Expr *expr_new_mhkos(Expr *expr) {
+    Expr *ex = malloc(sizeof(Expr));
+    if(!ex) {
+        printf("expr_new_mhkos: Failed to create the expression\n");
+        return NULL;
+    }
+
+    ex->type = EXPR_MHKOS;
+    ex->mhkos.expr = expr;
+
+    return ex;
+}
+
+
 Expr *expr_new_bin(Expr *left, Binop_type op, Expr *right) {
     Expr *ex = malloc(sizeof(Expr));
     if(!ex) {
@@ -111,6 +125,8 @@ Expr *expr_copy_expr(Expr *ex) {
             return expr_new_read(ex->read.prompt,ex->read.type);
         case EXPR_READ_FILE:
             return expr_new_read_file(expr_copy_expr(ex->read_file.expr));
+        case EXPR_MHKOS:
+            return expr_new_mhkos(expr_copy_expr(ex->mhkos.expr));
         case EXPR_BIN:
             return expr_new_bin(expr_copy_expr(ex->bin.left), ex->bin.op, expr_copy_expr(ex->bin.right));
     }
@@ -135,6 +151,9 @@ void expr_destroy(Expr *ex) {
             break;
         case EXPR_READ_FILE:
             expr_destroy(ex->read_file.expr);
+            break;
+        case EXPR_MHKOS:
+            expr_destroy(ex->mhkos.expr);
             break;
         case EXPR_BIN:
             expr_destroy(ex->bin.left);

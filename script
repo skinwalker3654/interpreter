@@ -15,16 +15,16 @@ wait number;
 
 # this is a for loop
 set i = 1;
-for i to 10:
+for i to 10 {
     println i;
-    i++;
-endfor
+    i = i + 1;
+}
 
 # this is an if statement
-if number > 2:
+if number > 2 {
     print number;
     println " is bigger than 2";
-endif
+}
 
 println "creating the folders...";
 wait 2;
@@ -32,7 +32,7 @@ wait 2;
 mkdir "FOLDER FOR PHOTOS";
 mkdir name;
 
-number++;
+number = number + 1;
 name = "john";
 
 println number;
@@ -42,28 +42,29 @@ wait 2;
 clear;
 wait 2;
 
-number += 20;
+number = number + 20;
 println number;
 
 remove "michael";
-if number > 20:
+if number > 20 {
     println "number is bigger than 20";
     set content = read_file "script";
     print content;
 
     # takes user input
-    set user_input = read "Enter something: ";
+    set user_input = read str "Enter something: ";
     println user_input;
 
-    number /= 2;
+    number = number / 2;
     println number;
 
     execute "vim";
     set num1 = read int "Give a number: ";
-    num1++;
+    num1 = num1 + 1;
 
     println num1;
+    println len content;
     endprogram;
-endif
+}
 
 println "program has not ended";

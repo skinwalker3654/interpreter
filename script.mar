@@ -47,17 +47,19 @@ an number > 20 {
     print periexomeno;
 
     # pernei apanthsh apo ton user
-    metablhth apanthsh = diabase "Grace kati tyxaio: ";
+    metablhth apanthsh = diabase mhnhma "Grace kati tyxaio: ";
     printent apanthsh;
 
     number = number / 2;
     printent number;
     
     treje "vim";
-    metablhth num1 = diabase akereo "Dwse enan ari8mo: ";
+    metablhth num1 = diabase ari8mo "Dwse enan ari8mo: ";
     num1 = num1 + 1;
 
     printent num1;
+    printent mhkos periexomeno;
+
     telosprograma;
 }
 

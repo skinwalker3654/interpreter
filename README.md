@@ -29,6 +29,10 @@ set name = "michael";
 
 # this line of code gets the content of the file and puts it into the variable
 set content = read_file "file_name";
+set user_input1 = read buff "Enter smth: ";
+set user_input2 = read int "Enter number: ";
+
+set var = len content;
 ```
 
 ### Take user input
@@ -157,13 +161,15 @@ if number > 2 {
     print content;
 
     # takes user input
-    set user_input = read "Write something: ";
+    set user_input = read str "Write something: ";
     println user_input;
 
     number = number / 2;
     println number;
 
     execute "vim";
+    println len content;
+
     endprogram;
 }
 

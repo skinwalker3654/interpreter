@@ -23,6 +23,7 @@ typedef enum {
     EXPR_READ_FILE,
     EXPR_READ,
     EXPR_BIN,
+    EXPR_MHKOS,
 } Expr_type;
 
 typedef enum {
@@ -54,6 +55,9 @@ typedef struct Expr {
             char *prompt;
             Read_type type;
         } read;
+        struct {
+            Expr *expr;
+        } mhkos;
         struct {
             Expr *expr; 
         } read_file;
@@ -122,6 +126,7 @@ Expr *expr_new_str(char *str);
 Expr *expr_new_ident(char *ident);
 Expr *expr_new_read(char *promt, Read_type type);
 Expr *expr_new_read_file(Expr *expr);
+Expr *expr_new_mhkos(Expr *expr);
 Expr *expr_new_bin(Expr *left, Binop_type op, Expr *right);
 
 Expr *expr_copy_expr(Expr *ex);
