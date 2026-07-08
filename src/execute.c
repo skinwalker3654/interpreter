@@ -41,14 +41,14 @@ static Value eval_binary(Variable_list *list, Expr *expr) {
             break;
     }
 
-    printf("Invalid operands\n");
+    printf("Δέν υπάρχει αυτό το σύμβολο για αριθμητικές πράξης\n");
     return (Value){ .type = VAL_ERR };
 }
 
 static Value lookup_variable(Variable_list *list, char *name) {
     int index = get_variable_index(list, name);
     if(index == -1) {
-        printf("Undefined variable '%s'\n", name);
+        printf("Κάπου στον κόδικα έχεις γράψη '%s' αλα αυτή η μεταβλητή ΔΕΝ υπάρχει κάπου\n", name);
         return (Value){ .type = VAL_ERR };
     }
 
@@ -75,7 +75,7 @@ static int eval_condition(Condition *cond, Variable_list *list) {
     Value right = eval_expr(list,cond->right);
     
     if(left.type == VAL_STR || right.type == VAL_STR) {
-        printf("Error: Cannot put strings on a condition\n");
+        printf("Error: Κάπου στον κόδικα έχεις βάλει μια μεταβλητή μέσα στο an και αυτή η μεταβλητή έχει μήνημα μέσα της. ΔΕΝ γίνεται να βάλεις μεταβλητές που έχουν μήνημα μεσα στο an\n");
         value_destroy(&left);
         value_destroy(&right);
         return 0;
@@ -134,7 +134,7 @@ int execute_metablhth(Ast *ast, Variable_list *list) {
                 case READ_NUM:
                     printf("%s",ast->data.metablhth.expr->read.prompt);
                     if(scanf("%d",&number)!=1) {
-                        printf("Error: Invalid number\n");
+                        printf("Error: Ο χρήστης δεν έδωσε αριθμό σωστό αριθμό\n");
                         return -1;
                     }
 
@@ -147,7 +147,7 @@ int execute_metablhth(Ast *ast, Variable_list *list) {
             v = eval_expr(list,ast->data.metablhth.expr->read_file.expr);
             fp = fopen(v.string_value,"r");
             if(!fp) {
-                printf("Error: File does not exists\n");
+                printf("Error: Το πρόγραμα απέτηχε να ανοίξη το αρχείο %s σιγουρέψου ότι υπάρχει\n",v.string_value);
                 value_destroy(&v);
                 return -1;
             }
@@ -187,7 +187,7 @@ int execute_metablhth(Ast *ast, Variable_list *list) {
                     expr_destroy(ex);
                     break;
                 case VAL_ERR:
-                    printf("Invalid value\n");
+                    printf("Εrror: Λάθος τιμή\n");
                     value_destroy(&v);
                     return -1;
             }
@@ -220,7 +220,7 @@ int execute_var_assign(Ast *ast, Variable_list *list) {
                 case READ_NUM:
                     printf("%s",ast->data.var_assign.expr->read.prompt);
                     if(scanf("%d",&number)!=1) {
-                        printf("Error: Invalid number\n");
+                        printf("Error: Ο χρήστης δεν έδωσε αριθμό σωστό αριθμό\n");
                         return -1;
                     }
 
@@ -233,7 +233,7 @@ int execute_var_assign(Ast *ast, Variable_list *list) {
             v = eval_expr(list,ast->data.var_assign.expr->read_file.expr);
             fp = fopen(v.string_value,"r");
             if(!fp) {
-                printf("Error: File does not exists\n");
+                printf("Error: Το πρόγραμα απέτηχε να ανοίξη το αρχείο %s σιγουρέψου ότι υπάρχει\n",v.string_value);
                 value_destroy(&v);
                 return -1;
             }
@@ -273,7 +273,7 @@ int execute_var_assign(Ast *ast, Variable_list *list) {
                     expr_destroy(ex);
                     break;
                 case VAL_ERR:
-                    printf("Invalid value\n");
+                    printf("Error: Λάθος τιμή\n");
                     value_destroy(&v);
                     return -1;
             }
@@ -301,7 +301,7 @@ int execute_gia(Ast *ast, Variable_list *list) {
     Value to = eval_expr(list,ast->data.gia.to);
 
     if(from.type == VAL_STR || to.type == VAL_STR) {
-        printf("Error: Cannot put string to gia\n");
+        printf("Error: Κάπου στον κόδικα έχεις βάλει μια μεταβλητή μέσα στο gia και αυτή η μεταβλητή έχει μήνημα μέσα της. ΔΕΝ γίνεται να βάλεις μεταβλητές που έχουν μήνημα μέσα στο gia\n");
         value_destroy(&from);
         value_destroy(&to);
         return -1;
@@ -371,7 +371,7 @@ int execute_perimene(Ast *ast, Variable_list *list) {
 int execute_sbyse(Ast *ast, Variable_list *list) {
     Value v = eval_expr(list,ast->data.sbyse.expr);
     if(remove(v.string_value)!=0) {
-        printf("File not found\n");
+        printf("Error: Το πρόγραμα απέτηχε να σβήσει το αρχείο/φάκελο με όνομα '%s' σιγουρέψου οτι υπάρχει\n",v.string_value);
         value_destroy(&v);
         return -1;
     }
@@ -382,7 +382,7 @@ int execute_sbyse(Ast *ast, Variable_list *list) {
 int execute_neosfakelos(Ast *ast, Variable_list *list) {
     Value v = eval_expr(list,ast->data.sbyse.expr);
     if(mkdir(v.string_value,0755)==-1) {
-        printf("File cant be created\n");
+        printf("Error: Το πρόγραμα απέτηχε να δημιουργίσει τον φάκελο με όνομα '%s' σιγουρέψου οτι δεν υπάρχει ήδη αυτός ο φάκελος γτ το πρόγραμα δεν μπορεί να φτιάξει φάκελους με όνομα που ήδη υπάρχει στο σύστημα σου\n",v.string_value);
         value_destroy(&v);
         return -1;
     }

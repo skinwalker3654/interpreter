@@ -144,7 +144,7 @@ static Token *get_string(Lexer *lx) {
     }
 
     if(lexer_peek(lx) == '\0') {
-        printf("Error %d: String %s never closed",lx->line,buffer);
+        printf("Error στην γραμμή %d: το μήνημα %s δεν έκλεισε ποτέ με -> \"\n",lx->line,buffer);
         return NULL;
     }
 
@@ -219,6 +219,6 @@ Token *token_get_next(Lexer *lx) {
         case '=': return token_create(TOK_ASSIGN,NULL);
     }
 
-    printf("Error %d: Invalid character '%s'\n",lx->line,symbol);
+    printf("Error στην γραμμή %d: δεν υπάρχει αυτό το σύμβολο -> '%s'\n",lx->line,symbol);
     return token_create(TOK_ERR,NULL);
 }

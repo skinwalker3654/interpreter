@@ -55,7 +55,7 @@ static int advance(Parser *ps) {
 
 static int consum(Parser *ps, Tok_type type, const char *msg) {
     if(!match(ps,type)) {
-        printf("Line %d: Parse error: %s\n",ps->lx->line,msg);
+        printf("Error στην γραμμή %d: %s\n",ps->lx->line,msg);
         return 0;
     }
 
@@ -77,7 +77,7 @@ static Expr *parse_primary(Parser *ps) {
     if(match(ps,TOK_LPAR)) {
         advance(ps);
         Expr *ex = parser_parse_expr(ps);
-        if(!consum(ps,TOK_RPAR,"Expected ')'")) {
+        if(!consum(ps,TOK_RPAR,"ξέχασες να κλείσης την παρένθεση με -> ')'")) {
             expr_destroy(ex);
             return NULL;
         }
@@ -101,7 +101,7 @@ static Expr *parse_primary(Parser *ps) {
         advance(ps);
 
         if(!match(ps,TOK_ARI8MO) && !match(ps,TOK_MHNHMA)) {
-            printf("Error line %d: Expected 'ari8mo' or 'mhnhma' before getting the input",ps->lx->line);
+            printf("Error στην γραμμή %d: μετα το diabase έπρεπε να βάλεις τι θες να διαβάσεις ΔΛΔ 'ari8mo' ή 'mhnhma'\n",ps->lx->line);
             return NULL;
         }
 
@@ -113,7 +113,7 @@ static Expr *parse_primary(Parser *ps) {
 
         advance(ps);
         if(!match(ps,TOK_STR_LIT)) {
-            printf("Error line %d: Expected 'prompt' in a string form\n",ps->lx->line);
+            printf("Error στην γραμμή %d: Έπρεπε να βάλεις ενα μήνημα στο diabase ώστε να το εμφανίσει οταν ο χρήστης δίνει τιμές\n",ps->lx->line);
             return NULL;
         }
 
@@ -132,7 +132,7 @@ static Expr *parse_primary(Parser *ps) {
         if(!ex) return NULL;
 
         if(ex->type == EXPR_INT || ex->type == EXPR_BIN || ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
-            printf("Error line %d: Cannot pass integers at diabase_arxeio\n",ps->lx->line);
+            printf("Error στην γραμμή %d: στην εντολή diabase_arxeio πρέπει να δώσεις το όνομα ενος αρχείου ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->lx->line);
             expr_destroy(ex);
             return NULL;
         }
@@ -140,7 +140,7 @@ static Expr *parse_primary(Parser *ps) {
         return expr_new_read_file(ex);
     }
 
-    printf("Error line %d: Expected an expression\n",ps->lx->line);
+    printf("Error στην γραμμή %d: Έπρεπε να βάλεις κάπιο μήνημα, μεταβλητή, diabase, diabase_arxeio ή μια αριθμητική πράξη\n",ps->lx->line);
     return NULL;
 }
 
@@ -150,15 +150,10 @@ static Expr *parse_additive(Parser *ps) {
 
     while(match(ps,TOK_PLUS) || match(ps,TOK_MINUS)) {
         Binop_type op;
-        if(match(ps,TOK_PLUS)) {
+        if(match(ps,TOK_PLUS)) 
             op = OP_ADD;
-        } else if(match(ps,TOK_MINUS)) {
+        else
             op = OP_SUB;
-        } else {
-            printf("Error line %d: Invalid arithmetic symbol '%c'\n",ps->lx->line,ps->lx->source[ps->lx->pos-1]);
-            expr_destroy(left);
-            return NULL;
-        }
 
         advance(ps);
         Expr *right = parse_multiplicative(ps);
@@ -183,15 +178,10 @@ static Expr *parse_multiplicative(Parser *ps) {
 
     while(match(ps,TOK_STAR) || match(ps,TOK_SLASH)) {
         Binop_type op;
-        if(match(ps,TOK_STAR)) {
+        if(match(ps,TOK_STAR)) 
             op = OP_MUL;
-        } else if(match(ps,TOK_SLASH)) {
+        else
             op = OP_DIV;
-        } else {
-            printf("Error line %d: Invalid arithmetic symbol '%c'\n",ps->lx->line,ps->lx->source[ps->lx->pos-1]);
-            expr_destroy(left);
-            return NULL;
-        }
 
         advance(ps);
         Expr *right = parse_primary(ps);
@@ -249,7 +239,7 @@ Condition *parser_parse_cond(Parser *ps) {
         && ps->current->type != TOK_LE
         && ps->current->type != TOK_LT
         && ps->current->type != TOK_NOT_EQ) {
-        printf("Parser error line %d: invalid condition type. ",ps->lx->line);
+        printf("Error στην γραμμή %d: Μέσα στο an έβαλες κάπιο σύμβολο σύγκρισεις που δεν υπάρχει\n",ps->lx->line);
         expr_destroy(left);
         return cond;
     }
@@ -269,11 +259,11 @@ Condition *parser_parse_cond(Parser *ps) {
 
 /* AST - API */
 Ast *parser_parse_metablhth(Parser *ps) {
-    if(!consum(ps,TOK_METABLHTH,"expected 'metablhth'"))
+    if(!consum(ps,TOK_METABLHTH,"Πρέπει να αρχίζει με metablhth"))
         return NULL;
 
     if(!match(ps,TOK_IDENT_LIT)) {
-        printf("Error line %d: expected variable name\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Έπρεπε να δώσεις το όνομα της μεταβλητής μετα το metablhth\n",ps->lx->line);
         return NULL;
     }
 
@@ -282,7 +272,7 @@ Ast *parser_parse_metablhth(Parser *ps) {
 
     advance(ps);
 
-    if(!consum(ps,TOK_ASSIGN,"expected '='")) {
+    if(!consum(ps,TOK_ASSIGN,"Μετά το όνομα της μεταβλητής έπρεπε να βάλεις =")) {
         free(name);
         return NULL;
     }
@@ -290,7 +280,7 @@ Ast *parser_parse_metablhth(Parser *ps) {
     Expr *ex = parser_parse_expr(ps);
     if(!ex) return NULL;
 
-    if(!consum(ps,TOK_SEMI,"expected ';' at the end of metablhth")) {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις ';' στο τέλος της metablhth")) {
         expr_destroy(ex);
         free(name);
         return NULL;
@@ -304,7 +294,7 @@ Ast *parser_parse_metablhth(Parser *ps) {
 
 Ast *parser_parse_var_assign(Parser *ps) {
     if(!match(ps,TOK_IDENT_LIT)) {
-        printf("Error line %d: expected variable name\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Πρέπει να αρχίζει με το όνομα της μεταβλητής\n",ps->lx->line);
         return NULL;
     }
 
@@ -313,7 +303,7 @@ Ast *parser_parse_var_assign(Parser *ps) {
 
     advance(ps);
 
-    if(!consum(ps,TOK_ASSIGN,"expected '='")) {
+    if(!consum(ps,TOK_ASSIGN,"Μετά το όνομα της μεταβλητής έπρεπε να βάλεις =")) {
         free(name);
         return NULL;
     }
@@ -321,7 +311,7 @@ Ast *parser_parse_var_assign(Parser *ps) {
     Expr *ex = parser_parse_expr(ps);
     if(!ex) return NULL;
 
-    if(!consum(ps,TOK_SEMI,"expected ';' at the end of metablhth")) {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις ';' στο τέλος της metablhth")) {
         expr_destroy(ex);
         free(name);
         return NULL;
@@ -334,12 +324,12 @@ Ast *parser_parse_var_assign(Parser *ps) {
 }
 
 Ast *parser_parse_an(Parser *ps) {
-    if(!consum(ps,TOK_AN,"expected 'an'")) 
+    if(!consum(ps,TOK_AN,"Πρέπει να αρχίζει με 'an'")) 
         return NULL;
 
     Condition *cond = parser_parse_cond(ps);
 
-    if(!consum(ps,TOK_LBRA,"expected '{' at the condition")) {
+    if(!consum(ps,TOK_LBRA,"Μετά την σύγκρισει έπρεπε να βάλεις {")) {
         cond_destroy(cond);
         return NULL;
     }
@@ -356,7 +346,7 @@ Ast *parser_parse_an(Parser *ps) {
         ast_append(&body,stmt);
     }
 
-    if(!consum(ps,TOK_RBRA,"expected '}' at the end of an")) {
+    if(!consum(ps,TOK_RBRA,"Στο an ξέχασες να κλείσης την παρένθεση του an με '}'")) {
         ast_destroy(body);
         return NULL;
     }
@@ -365,28 +355,28 @@ Ast *parser_parse_an(Parser *ps) {
 }
 
 Ast *parser_parse_gia(Parser *ps) {
-    if(!consum(ps,TOK_GIA,"expected 'gia'")) 
+    if(!consum(ps,TOK_GIA,"Πρέπει να αρχίζει με 'gia'")) 
         return NULL;
 
     Expr *from = parser_parse_expr(ps);
     if(from->type == EXPR_STR) {
-        printf("Error line %d: cannot put strings on gia\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο gia πρέπει να βάλεις 2 αριθμούς ή μεταβλητές\n",ps->lx->line);
         return NULL;
     }
 
-    if(!consum(ps,TOK_EOS,"expected 'eos' at gia")) {
+    if(!consum(ps,TOK_EOS,"Ξέχασες να βάλεις το eos στο gia")) {
         expr_destroy(from);
         return NULL;
     }
 
     Expr *to = parser_parse_expr(ps);
-    if(from->type == EXPR_STR) {
-        printf("Error line %d: cannot put strings on gia\n",ps->lx->line);
+    if(to->type == EXPR_STR) {
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο gia πρέπει να βάλεις 2 αριθμούς ή μεταβλητές\n",ps->lx->line);
         expr_destroy(from);
         return NULL;
     }
 
-    if(!consum(ps,TOK_LBRA,"expected '{' at the condition")) {
+    if(!consum(ps,TOK_LBRA,"Πρέπει να βάλεις '{' στο gia ώστε να βάλεις τι να κάνει για πολές φορές")) {
         expr_destroy(from);
         expr_destroy(to);
         return NULL;
@@ -405,7 +395,7 @@ Ast *parser_parse_gia(Parser *ps) {
         ast_append(&body,stmt);
     }
 
-    if(!consum(ps,TOK_RBRA,"expected '}' at the end of an")) {
+    if(!consum(ps,TOK_RBRA,"Ξέχασες να κλείσης το την παρένθεση του gia με '}'")) {
         ast_destroy(body);
         expr_destroy(from);
         expr_destroy(to);
@@ -416,19 +406,19 @@ Ast *parser_parse_gia(Parser *ps) {
 }
 
 Ast *parser_parse_print(Parser *ps) {
-    if(!consum(ps,TOK_PRINT,"expected 'print'\n"))
+    if(!consum(ps,TOK_PRINT,"Πρέπει να αρχίζει με 'print'\n"))
         return NULL;
 
     Expr *ex = parser_parse_expr(ps);
     if(!ex) return NULL;
 
     if(ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
-        printf("Error line %d: cannot put diabase_arxeio or diabse on printent\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις diabase ή diabase_arxeio μέσα στην print, αυτό γίνεται μόνο στης μεταβλητές\n",ps->lx->line);
         expr_destroy(ex);
         return NULL;
     }
 
-    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις το ';' στο τέλος του print"))  {
         expr_destroy(ex);
         return NULL;
     }
@@ -437,19 +427,19 @@ Ast *parser_parse_print(Parser *ps) {
 }
 
 Ast *parser_parse_printent(Parser *ps) {
-    if(!consum(ps,TOK_PRINTENT,"expected 'printent'\n"))
+    if(!consum(ps,TOK_PRINTENT,"Πρέπει να αρχίζει με 'printent'\n"))
         return NULL;
 
     Expr *ex = parser_parse_expr(ps);
     if(!ex) return NULL;
 
     if(ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
-        printf("Error line %d: cannot put diabase_arxeio or diabse on printent\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις diabase ή diabase_arxeio μέσα στην printent, αυτό γίνεται μόνο στης μεταβλητές\n",ps->lx->line);
         expr_destroy(ex);
         return NULL;
     }
 
-    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις το ';' στο τέλος του printent"))  {
         expr_destroy(ex);
         return NULL;
     }
@@ -458,84 +448,84 @@ Ast *parser_parse_printent(Parser *ps) {
 }
 
 Ast *parser_parse_perimene(Parser *ps) {
-    if(!consum(ps,TOK_PERIMENE,"expected 'perimene'\n"))
+    if(!consum(ps,TOK_PERIMENE,"Πρέπει να αρχίζει με 'perimene'\n"))
         return NULL;
 
     Expr *ex = parser_parse_expr(ps);
     if(!ex) return NULL;
 
     if(ex->type == EXPR_STR || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE) {
-        printf("Error line %d: cannot put string\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο perimene πρέπει να βάλεις έναν αριθμό ή μεταβλητή\n",ps->lx->line);
         expr_destroy(ex);
         return NULL;
     }
 
-    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις το ';' στο τέλος του perimene"))  {
         expr_destroy(ex);
         return NULL;
     }
-    
+
     return ast_new_perimene(ex);
 }
 
 
 Ast *parser_parse_sbyse(Parser *ps) {
-    if(!consum(ps,TOK_SBYSE,"expected 'sbyse'\n"))
+    if(!consum(ps,TOK_SBYSE,"Πρέπει να αρχίζει με 'sbyse'\n"))
         return NULL;
 
     Expr *ex = parser_parse_expr(ps);
     if(!ex) return NULL;
 
     if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN) {
-        printf("Error line %d: cannot put number\n",ps->lx->line);
+        printf("Error στην γραμμή %d: στην εντολή sbyse πρέπει να δώσεις το όνομα ενος αρχείου/φακέλου ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->lx->line);
         expr_destroy(ex);
         return NULL;
     }
 
-    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις το ';' στο τέλος του sbyse"))  {
         expr_destroy(ex);
         return NULL;
     }
-    
+
     return ast_new_sbyse(ex);
 }
 
 
 Ast *parser_parse_treje(Parser *ps) {
-    if(!consum(ps,TOK_TREJE,"expected 'treje'\n"))
+    if(!consum(ps,TOK_TREJE,"Πρέπει να αρχίζει με 'treje'\n"))
         return NULL;
 
     Expr *ex = parser_parse_expr(ps);
     if(!ex) return NULL;
 
     if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN) {
-        printf("Error line %d: cannot put number\n",ps->lx->line);
+        printf("Error στην γραμμή %d: στην εντολή treje πρέπει να δώσεις την εντόλη που θες να τρέξεις στο terminal ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->lx->line);
         expr_destroy(ex);
         return NULL;
     }
 
-    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις το ';' στο τέλος του treje"))  {
         expr_destroy(ex);
         return NULL;
     }
-    
+
     return ast_new_treje(ex);
 }
 
 Ast *parser_parse_neosfakelos(Parser *ps) {
-    if(!consum(ps,TOK_NEOSFAKELOS,"expected 'treje'\n"))
+    if(!consum(ps,TOK_NEOSFAKELOS,"Πρέπει να αρχίζει με 'neosfakelos'\n"))
         return NULL;
 
     Expr *ex = parser_parse_expr(ps);
     if(!ex) return NULL;
 
     if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN) {
-        printf("Error line %d: cannot put number\n",ps->lx->line);
+        printf("Error στην γραμμή %d: στην εντολή neosfakelos πρέπει να δώσεις το όνομα του φάκελου που θες να φτιαχτεί ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->lx->line);
         expr_destroy(ex);
         return NULL;
     }
 
-    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις το ';' στο τέλος του neosfakelos"))  {
         expr_destroy(ex);
         return NULL;
     }
@@ -544,25 +534,25 @@ Ast *parser_parse_neosfakelos(Parser *ps) {
 }
 
 Ast *parser_parse_telosprograma(Parser *ps) {
-    if(!consum(ps,TOK_TELOS_PROGRAMA,"expected 'telosprograma'\n"))
+    if(!consum(ps,TOK_TELOS_PROGRAMA,"Πρέπει να αρχίζει με 'telosprograma'\n"))
         return NULL;
 
-    if(!consum(ps,TOK_SEMI,"expected ';'")) {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις το ';' στο τέλος του telosprograma"))  {
         return NULL;
     }
-    
+
     return ast_new_telosprograma();
 }
 
 
 Ast *parser_parse_ka8arise(Parser *ps) {
-    if(!consum(ps,TOK_KA8ARISE,"expected 'ka8arise'\n"))
+    if(!consum(ps,TOK_KA8ARISE,"Πρέπει να αρχίζει με 'ka8arise'\n"))
         return NULL;
 
-    if(!consum(ps,TOK_SEMI,"expected ';'"))  {
+    if(!consum(ps,TOK_SEMI,"Ξέχασες να βάλεις το ';' στο τέλος του ka8arise"))  {
         return NULL;
     }
-    
+
     return ast_new_ka8arise();
 }
 
@@ -592,7 +582,7 @@ Ast *parser_parse_stmt(Parser *ps) {
     } else if(match(ps,TOK_KA8ARISE)) {
         return parser_parse_ka8arise(ps);
     } else {
-        printf("Error: Inexprid value to start '%s'\n",ps->current->value);
+        printf("Error στην γραμμή %d: Δεν υπάρχει ΚΑΜΊΑ λιτουργία στην γλώσσα που να αρχίζει με '%s'\n",ps->lx->line,ps->current->value);
         advance(ps);
         return NULL;
     }

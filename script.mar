@@ -1,6 +1,6 @@
 metablhth number = 10;
 metablhth name = "michael";
-number++;
+number = number + 1;
 
 print "Name: ";
 printent name;
@@ -16,16 +16,16 @@ perimene number;
 
 # ayto einai ena loop
 metablhth i = 1;
-gia i eos 10:
+gia i eos 10 {
     printent i;
-    i++;
-telosgia
+    i = i + 1;
+}
 
 # kai ayto einai mia syn8ikh
-an number > 2:
+an number > 2 {
     print number;
     printent " is bigger than 2";
-telosan
+}
 
 printent "creating the folders...";
 perimene 2;
@@ -37,11 +37,11 @@ perimene 2;
 ka8arise;
 perimene 2;
 
-number += 20;
+number = number + 20;
 printent number;
 
 sbyse "michael";
-an number > 20:
+an number > 20 {
     printent "number is bigger than 20";
     metablhth periexomeno = diabase_arxeio "script.mar";
     print periexomeno;
@@ -50,15 +50,15 @@ an number > 20:
     metablhth apanthsh = diabase "Grace kati tyxaio: ";
     printent apanthsh;
 
-    number /= 2;
+    number = number / 2;
     printent number;
     
     treje "vim";
     metablhth num1 = diabase akereo "Dwse enan ari8mo: ";
-    num1++;
+    num1 = num1 + 1;
 
     printent num1;
     telosprograma;
-telosgia
+}
 
 printent "program is not ended";
