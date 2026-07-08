@@ -381,12 +381,21 @@ int execute_sbyse(Ast *ast, Variable_list *list) {
 
 int execute_neosfakelos(Ast *ast, Variable_list *list) {
     Value v = eval_expr(list,ast->data.sbyse.expr);
-    if(mkdir(v.string_value,0755)==-1) {
-        printf("Error: Το πρόγραμα απέτηχε να δημιουργίσει τον φάκελο με όνομα '%s' σιγουρέψου οτι δεν υπάρχει ήδη αυτός ο φάκελος γτ το πρόγραμα δεν μπορεί να φτιάξει φάκελους με όνομα που ήδη υπάρχει στο σύστημα σου\n",v.string_value);
+    #ifdef _WIN32
+        if(mkdir(v.string_value)==-1) {
+            printf("Error: Το πρόγραμα απέτηχε να δημιουργίσει τον φάκελο με όνομα '%s' σιγουρέψου οτι δεν υπάρχει ήδη αυτός ο φάκελος γτ το πρόγραμα δεν μπορεί να φτιάξει φάκελους με όνομα που ήδη υπάρχει στο σύστημα σου\n",v.string_value);
+            value_destroy(&v);
+            return -1;
+        }
         value_destroy(&v);
-        return -1;
-    }
-    value_destroy(&v);
+    #else
+        if(mkdir(v.string_value,0755)==-1) {
+            printf("Error: Το πρόγραμα απέτηχε να δημιουργίσει τον φάκελο με όνομα '%s' σιγουρέψου οτι δεν υπάρχει ήδη αυτός ο φάκελος γτ το πρόγραμα δεν μπορεί να φτιάξει φάκελους με όνομα που ήδη υπάρχει στο σύστημα σου\n",v.string_value);
+            value_destroy(&v);
+            return -1;
+        }
+        value_destroy(&v);
+    #endif
     return 0;
 }
 
@@ -436,7 +445,12 @@ int execute_program(Ast *ast, Variable_list *list) {
                 if(execute_neosfakelos(ast,list)==-1) return -1;
                 break;
             case AST_KA8ARISE:
-                system("clear");
+                #ifdef _WIN32
+                    system("cls");
+                #else 
+                    system("clear");
+                #endif
+
                 break;
             case AST_TELOSPROGRAMA:
                 return 1;
