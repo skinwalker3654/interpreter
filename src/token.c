@@ -138,7 +138,7 @@ static Token *get_number(Lexer *lx) {
 static Token *get_string(Lexer *lx) {
     lexer_advance(lx);
 
-    char *buffer = NULL;
+    char *buffer = strdup("\0");
     while(lexer_peek(lx) != '"' && lexer_peek(lx) != '\0') {
         string_push_char(&buffer, lexer_advance(lx));
     }
