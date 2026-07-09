@@ -124,6 +124,11 @@ static int eval_condition(Condition *cond, Variable_list *list) {
 
 int execute_program(Ast *ast, Variable_list *list);
 
+void get_new_line() {
+    char ch;
+    while((ch = getchar())!='\n'&&ch!=EOF);
+}
+
 int execute_metablhth(Ast *ast, Variable_list *list) {
     char *input_buff = NULL;
     size_t input_buff_size = 0;
@@ -149,8 +154,10 @@ int execute_metablhth(Ast *ast, Variable_list *list) {
                     printf("%s",ast->data.metablhth.expr->read.prompt);
                     if(scanf("%d",&number)!=1) {
                         printf("Error: Ο χρήστης δεν έδωσε αριθμό σωστό αριθμό\n");
+                        get_new_line();
                         return -1;
                     }
+                    get_new_line();
 
                     ex = expr_new_int(number);
                     push_variable_value(list,ast->data.metablhth.varname,ex);
@@ -236,8 +243,10 @@ int execute_var_assign(Ast *ast, Variable_list *list) {
                     printf("%s",ast->data.var_assign.expr->read.prompt);
                     if(scanf("%d",&number)!=1) {
                         printf("Error: Ο χρήστης δεν έδωσε αριθμό σωστό αριθμό\n");
+                        get_new_line();
                         return -1;
                     }
+                    get_new_line();
 
                     ex = expr_new_int(number);
                     set_variable_value(list,ast->data.var_assign.varname,ex);
