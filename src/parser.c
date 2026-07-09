@@ -55,7 +55,7 @@ static int advance(Parser *ps) {
 
 static int consum(Parser *ps, Tok_type type, const char *msg) {
     if(!match(ps,type)) {
-        printf("Error στην γραμμή %d: %s\n",ps->lx->line,msg);
+        printf("Error στην γραμμή %d: %s\n",ps->current->line,msg);
         return 0;
     }
 
@@ -104,7 +104,7 @@ static Expr *parse_primary(Parser *ps) {
         if(!ex) return NULL;
 
         if(ex->type == EXPR_READ_FILE || ex->type == EXPR_READ || ex->type == EXPR_BIN || ex->type == EXPR_INT) {
-            printf("Error στην γραμμή %d: Μετά το mhkos έπρεπε να βάλεις κάπιο μήνημα ή μεταβλητή. ΟΧΙ αριθμό\n",ps->lx->line);
+            printf("Error στην γραμμή %d: Μετά το mhkos έπρεπε να βάλεις κάπιο μήνημα ή μεταβλητή. ΟΧΙ αριθμό\n",ps->current->line);
             expr_destroy(ex);
             return NULL;
         }
@@ -116,7 +116,7 @@ static Expr *parse_primary(Parser *ps) {
         advance(ps);
 
         if(!match(ps,TOK_ARI8MO) && !match(ps,TOK_MHNHMA)) {
-            printf("Error στην γραμμή %d: Μετά το diabase έπρεπε να βάλεις τι θες να διαβάσεις ΔΛΔ 'ari8mo' ή 'mhnhma'\n",ps->lx->line);
+            printf("Error στην γραμμή %d: Μετά το diabase έπρεπε να βάλεις τι θες να διαβάσεις ΔΛΔ 'ari8mo' ή 'mhnhma'\n",ps->current->line);
             return NULL;
         }
 
@@ -128,7 +128,7 @@ static Expr *parse_primary(Parser *ps) {
 
         advance(ps);
         if(!match(ps,TOK_STR_LIT)) {
-            printf("Error στην γραμμή %d: Έπρεπε να βάλεις ενα μήνημα στο diabase ώστε να το εμφανίσει οταν ο χρήστης δίνει τιμές\n",ps->lx->line);
+            printf("Error στην γραμμή %d: Έπρεπε να βάλεις ενα μήνημα στο diabase ώστε να το εμφανίσει οταν ο χρήστης δίνει τιμές\n",ps->current->line);
             return NULL;
         }
 
@@ -147,7 +147,7 @@ static Expr *parse_primary(Parser *ps) {
         if(!ex) return NULL;
 
         if(ex->type == EXPR_INT || ex->type == EXPR_BIN || ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
-            printf("Error στην γραμμή %d: στην εντολή diabase_arxeio πρέπει να δώσεις το όνομα ενος αρχείου ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->lx->line);
+            printf("Error στην γραμμή %d: στην εντολή diabase_arxeio πρέπει να δώσεις το όνομα ενος αρχείου ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->current->line);
             expr_destroy(ex);
             return NULL;
         }
@@ -155,7 +155,7 @@ static Expr *parse_primary(Parser *ps) {
         return expr_new_read_file(ex);
     }
 
-    printf("Error στην γραμμή %d: Έπρεπε να βάλεις κάπιο μήνημα, μεταβλητή, diabase, diabase_arxeio ή μια αριθμητική πράξη\n",ps->lx->line);
+    printf("Error στην γραμμή %d: Έπρεπε να βάλεις κάπιο μήνημα, μεταβλητή, diabase, diabase_arxeio ή μια αριθμητική πράξη\n",ps->current->line);
     return NULL;
 }
 
@@ -254,7 +254,7 @@ Condition *parser_parse_cond(Parser *ps) {
         && ps->current->type != TOK_LE
         && ps->current->type != TOK_LT
         && ps->current->type != TOK_NOT_EQ) {
-        printf("Error στην γραμμή %d: Μέσα στο an έβαλες κάπιο σύμβολο σύγκρισεις που δεν υπάρχει\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Μέσα στο an έβαλες κάπιο σύμβολο σύγκρισεις που δεν υπάρχει\n",ps->current->line);
         expr_destroy(left);
         return cond;
     }
@@ -278,7 +278,7 @@ Ast *parser_parse_metablhth(Parser *ps) {
         return NULL;
 
     if(!match(ps,TOK_IDENT_LIT)) {
-        printf("Error στην γραμμή %d: Έπρεπε να δώσεις το όνομα της μεταβλητής μετα το metablhth\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Έπρεπε να δώσεις το όνομα της μεταβλητής μετα το metablhth\n",ps->current->line);
         return NULL;
     }
 
@@ -312,7 +312,7 @@ Ast *parser_parse_metablhth(Parser *ps) {
 
 Ast *parser_parse_var_assign(Parser *ps) {
     if(!match(ps,TOK_IDENT_LIT)) {
-        printf("Error στην γραμμή %d: Πρέπει να αρχίζει με το όνομα της μεταβλητής\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Πρέπει να αρχίζει με το όνομα της μεταβλητής\n",ps->current->line);
         return NULL;
     }
 
@@ -383,7 +383,7 @@ Ast *parser_parse_gia(Parser *ps) {
     if(!from) return NULL;
 
     if(from->type == EXPR_STR || from->type == EXPR_READ || from->type == EXPR_READ_FILE) {
-        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο gia πρέπει να βάλεις 2 αριθμούς ή μεταβλητές\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο gia πρέπει να βάλεις 2 αριθμούς ή μεταβλητές\n",ps->current->line);
         return NULL;
     }
 
@@ -397,7 +397,7 @@ Ast *parser_parse_gia(Parser *ps) {
 
 
     if(to->type == EXPR_STR || to->type == EXPR_READ || to->type == EXPR_READ_FILE) {
-        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο gia πρέπει να βάλεις 2 αριθμούς ή μεταβλητές\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο gia πρέπει να βάλεις 2 αριθμούς ή μεταβλητές\n",ps->current->line);
         expr_destroy(from);
         return NULL;
     }
@@ -439,7 +439,7 @@ Ast *parser_parse_print(Parser *ps) {
     if(!ex) return NULL;
 
     if(ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
-        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις diabase ή diabase_arxeio μέσα στην print, αυτό γίνεται μόνο στης μεταβλητές\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις diabase ή diabase_arxeio μέσα στην print, αυτό γίνεται μόνο στης μεταβλητές\n",ps->current->line);
         expr_destroy(ex);
         return NULL;
     }
@@ -460,7 +460,7 @@ Ast *parser_parse_printent(Parser *ps) {
     if(!ex) return NULL;
 
     if(ex->type == EXPR_READ_FILE || ex->type == EXPR_READ) {
-        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις diabase ή diabase_arxeio μέσα στην printent, αυτό γίνεται μόνο στης μεταβλητές\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις diabase ή diabase_arxeio μέσα στην printent, αυτό γίνεται μόνο στης μεταβλητές\n",ps->current->line);
         expr_destroy(ex);
         return NULL;
     }
@@ -481,7 +481,7 @@ Ast *parser_parse_perimene(Parser *ps) {
     if(!ex) return NULL;
 
     if(ex->type == EXPR_STR || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE) {
-        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο perimene πρέπει να βάλεις έναν αριθμό ή μεταβλητή\n",ps->lx->line);
+        printf("Error στην γραμμή %d: Δέν γίνεται να βάλεις μηνήματα μέσα στο perimene πρέπει να βάλεις έναν αριθμό ή μεταβλητή\n",ps->current->line);
         expr_destroy(ex);
         return NULL;
     }
@@ -503,7 +503,7 @@ Ast *parser_parse_sbyse(Parser *ps) {
     if(!ex) return NULL;
 
     if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN || ex->type == EXPR_MHKOS) {
-        printf("Error στην γραμμή %d: στην εντολή sbyse πρέπει να δώσεις το όνομα ενος αρχείου/φακέλου ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->lx->line);
+        printf("Error στην γραμμή %d: στην εντολή sbyse πρέπει να δώσεις το όνομα ενος αρχείου/φακέλου ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->current->line);
         expr_destroy(ex);
         return NULL;
     }
@@ -525,7 +525,7 @@ Ast *parser_parse_treje(Parser *ps) {
     if(!ex) return NULL;
 
     if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN || ex->type == EXPR_MHKOS) {
-        printf("Error στην γραμμή %d: στην εντολή treje πρέπει να δώσεις την εντόλη που θες να τρέξεις στο terminal ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->lx->line);
+        printf("Error στην γραμμή %d: στην εντολή treje πρέπει να δώσεις την εντόλη που θες να τρέξεις στο terminal ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->current->line);
         expr_destroy(ex);
         return NULL;
     }
@@ -546,7 +546,7 @@ Ast *parser_parse_neosfakelos(Parser *ps) {
     if(!ex) return NULL;
 
     if(ex->type == EXPR_INT || ex->type == EXPR_READ || ex->type == EXPR_READ_FILE || ex->type == EXPR_BIN || ex->type == EXPR_MHKOS) {
-        printf("Error στην γραμμή %d: στην εντολή neosfakelos πρέπει να δώσεις το όνομα του φάκελου που θες να φτιαχτεί ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->lx->line);
+        printf("Error στην γραμμή %d: στην εντολή neosfakelos πρέπει να δώσεις το όνομα του φάκελου που θες να φτιαχτεί ή μια μεταβλητή. ΌΧΙ αριθμούς\n",ps->current->line);
         expr_destroy(ex);
         return NULL;
     }
@@ -608,7 +608,7 @@ Ast *parser_parse_stmt(Parser *ps) {
     } else if(match(ps,TOK_KA8ARISE)) {
         return parser_parse_ka8arise(ps);
     } else {
-        printf("Error στην γραμμή %d: Δεν υπάρχει ΚΑΜΊΑ λιτουργία στην γλώσσα που να αρχίζει με '%s'\n",ps->lx->line,ps->current->value);
+        printf("Error στην γραμμή %d: Δεν υπάρχει ΚΑΜΊΑ λιτουργία στην γλώσσα που να αρχίζει με '%s'\n",ps->current->line,ps->current->value);
         advance(ps);
         return NULL;
     }

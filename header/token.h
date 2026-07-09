@@ -58,9 +58,10 @@ typedef enum {
 typedef struct {
     Tok_type type;
     char *value;
+    int line;
 } Token;
 
-Token *token_create(Tok_type type, char *value);
+Token *token_create(Tok_type type, char *value,int line);
 void token_destroy(Token *tk);
 Token *token_get_next(Lexer *lx);
 
