@@ -78,7 +78,7 @@ static Token *get_ident(Lexer *lx,int line) {
     } else if(strcmp(buffer,"eos")==0 || strcmp(buffer,"to")==0) {
         free(buffer);
         return token_create(TOK_EOS,NULL,line);
-    } else if(strcmp(buffer,"ari8mo")==0 || strcmp(buffer,"num")==0) {
+    } else if(strcmp(buffer,"ari8mo")==0 || strcmp(buffer,"int")==0) {
         free(buffer);
         return token_create(TOK_ARI8MO,NULL,line);
     } else if(strcmp(buffer,"mhnhma")==0 || strcmp(buffer,"str")==0) {
